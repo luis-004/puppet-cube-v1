@@ -1,0 +1,74 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: g++.exe build active file",
+			"command": "C:/msys64/mingw64/bin/g++.exe",
+			"args": [
+				"-fdiagnostics-color=always",
+				//"-mconsole",
+				"-g",
+				"${fileDirname}/Main.cpp",  
+                "${fileDirname}/Puppet.cpp",
+				"${fileDirname}/AlgMani.cpp",
+				"${fileDirname}/PuppetShape.cpp",
+				"${fileDirname}/Table.cpp",
+				"-o",
+				"${fileDirname}/Main.exe"
+			],
+			"options": {
+				"cwd": "C:/msys64/mingw64/bin"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"detail": "compiler: C:/msys64/mingw64/bin/g++.exe"
+		},
+		{
+			"type": "cppbuild",
+			"label": "Build Main",
+			"command": "C:/msys64/mingw64/bin/g++.exe",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-mconsole",
+				"-g",
+				"-O0",
+				"-pedantic",
+				"-Wall",
+				"-Werror",
+				"-D_GLIBCXX_DEBUG",
+				"-D_GLIBCXX_DEBUG_PEDANTIC",
+				//"-fsanitize=undefined",
+				//"-fno-sanitize-recover",
+
+				"${fileDirname}/Main.cpp",
+                "${fileDirname}/PuppetShape.cpp",
+				"${fileDirname}/Puppet.cpp",
+				"${fileDirname}/AlgMani.cpp",
+				"${fileDirname}/Table.cpp",
+				"-o",
+				"${fileDirname}/Main.exe"
+			],
+			"options": {
+				"cwd": "C:/msys64/mingw64/bin"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"detail": "compiler: C:/msys64/mingw64/bin/g++.exe"
+		},
+		{
+			"label": "saveOutput",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"\"${fileDirname}\\Main.exe > ${fileDirname}\\output.txt\""
+			],
+			"group": "test"
+		}
+	]
+}
