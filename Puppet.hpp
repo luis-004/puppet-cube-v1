@@ -72,9 +72,6 @@ class Puppet {
         {4, 5, 255}
     };
 
-    static constexpr std::array<uint8_t, NUM_CORNER_VALS> ctest = {0,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6};
-    static constexpr std::array<uint8_t, RANGE_EDGE_VALS> etest = {0,1,2,3,4,5,6,7,8,255,255,255,255,255,255,255,0,1,2,3,4,5,6,7,8};
-
     inline static const auto from7choose3 = [] {
         std::array<std::array<uint8_t, 128>, 7> table{};
         for (auto& row : table) {
@@ -120,6 +117,5 @@ class Puppet {
         void mirrorCorners(State& state);
         void rotateEdges(State& state);
         void mirrorEdges(State& state);
-        void checkState(const State& state);
         void solveParity(State& state);
 };

@@ -31,7 +31,7 @@ int main(){
     //Puppet::State state;
     AlgMani am;
     Table table;
-    table.corner_flip_heuristic();
+    table.corner_flip_heuristic_full();
     //table.shape_table();
     /*std::vector<uint16_t> info_table;
     std::vector<uint16_t> index_table;

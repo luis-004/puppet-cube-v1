@@ -10,26 +10,26 @@ void Table::shape_table(){
     uint8_t last_face = 255;
     bool v = 0;
     uint16_t index = 1;
-    uint16_t count = 1;
+    uint16_t distinct = 1;
     std::array<std::vector<std::vector<Move>>, 2> algs;
     std::vector<Move> alg = {};
     std::vector<uint16_t> info_table;
+    std::vector<uint16_t> repr_index_table;
+    std::vector<uint8_t> DCA_table;
     std::vector<uint16_t> index_table;
-    std::vector<uint8_t> tableDCA;
-    std::vector<uint16_t> total_index_table;
     info_table.resize(shape_table_size);
-    tableDCA.resize(shape_table_size);
-    index_table.assign(shape_table_size, num_distinct_shapes);
-    total_index_table.resize(shape_table_size, num_shapes);
+    DCA_table.resize(shape_table_size);
+    index_table.assign(shape_table_size, num_shapes);
+    repr_index_table.resize(shape_table_size, num_distinct_shapes);
     uint8_t num_turns = 1;
     bool s = true;
     puppet.getSolved(state);
     ps.get_cube_shape(shape);
     const uint8_t repr_bit = 9; 
     info_table[puppet.getShapeHash(state)] = 0b1111111111; // all moves possible; repr bit set
+    repr_index_table[puppet.getShapeHash(state)] = 0;
+    DCA_table[puppet.getShapeHash(state)] = 0b1111;
     index_table[puppet.getShapeHash(state)] = 0;
-    tableDCA[puppet.getShapeHash(state)] = 0b1111;
-    total_index_table[puppet.getShapeHash(state)] = 0;
     while(true){
         if(!algs[v].empty()){
             alg = algs[v].back();
@@ -43,8 +43,8 @@ void Table::shape_table(){
             last_face = getFace(alg.back());
         }else if(!algs[!v].empty()){
             std::cout << "num turns:" << int(num_turns) <<  std::endl;
-            std::cout << "num cases:" << int(count) <<  std::endl;
-            std::cout << "num distinct cases:" << int(index) <<  std::endl;
+            std::cout << "num cases:" << int(index) <<  std::endl;
+            std::cout << "num distinct cases:" << int(distinct) <<  std::endl;
             now = std::chrono::high_resolution_clock::now();
             duration = now - start_time;
             std::cout << "time: " << duration.count() <<  std::endl << std::endl;
@@ -57,8 +57,8 @@ void Table::shape_table(){
             std::cout << "end" << std::endl;
             write_table("Shape_info", info_table);
             write_table("Shape_index", index_table);
-            write_table("Shape_singular", total_index_table);
-            write_table("ShapeDCA", tableDCA);
+            write_table("Shape_repr", repr_index_table);
+            write_table("Shape_DCA", DCA_table);
             std::cout << "saved" <<  std::endl;
             now = std::chrono::high_resolution_clock::now();
             duration = now - start_time;
@@ -66,15 +66,14 @@ void Table::shape_table(){
             return;
         }
         uint32_t hash = puppet.getShapeHash(state);
-        //puppet.checkState(state); 
         for(uint8_t face = 0; face < 3; ++face){
             bool HT_possible = false;
             for(uint8_t dir = 0; dir < 3; ++dir){
                 if((HT_possible || dir != 2) && ps.turn(shape, face, dir)){
                     info_table[hash] |= (1u << (face + dir*3)); // add valid turn
-                    tableDCA[hash] |= (1u << 0);
+                    DCA_table[hash] |= (1u << 0);
                     if(dir == 2){
-                        tableDCA[hash] |= (1u << (face + 1));
+                        DCA_table[hash] |= (1u << (face + 1));
                     }
                     if(face == last_face){
                         ps.turn(shape, face, getRevDir(dir));
@@ -83,20 +82,20 @@ void Table::shape_table(){
                     }
                     puppet.turn(state, face, dir);
                     uint32_t new_hash = puppet.getShapeHash(state);
-                    if(total_index_table[new_hash] > count){
-                        total_index_table[new_hash] = count++;
+                    if(index_table[new_hash] > index){
+                        index_table[new_hash] = index++;
                         Puppet::State similar_state = state;
                         bool new_singular = true;
                         for(int i = 0; i < 5; i++){
                             i == 2 ? puppet.mirrorCorners(similar_state) : puppet.rotateCorners(similar_state);
-                            if(index_table[puppet.getShapeHash(similar_state)] < index){
-                                index_table[new_hash] = index_table[puppet.getShapeHash(similar_state)];
+                            if(repr_index_table[puppet.getShapeHash(similar_state)] < distinct){
+                                repr_index_table[new_hash] = repr_index_table[puppet.getShapeHash(similar_state)];
                                 new_singular = false;
                                 break;
                             }
                         }
                         if(new_singular){
-                            index_table[new_hash] = index++;
+                            repr_index_table[new_hash] = distinct++;
                             info_table[new_hash] |= (1u << repr_bit);
                         }
                         alg.push_back(getMove(face, dir));
@@ -108,6 +107,102 @@ void Table::shape_table(){
                     HT_possible = true;
                 }
             }
+        }
+    }
+}
+
+void Table::corner_flip_heuristic_full(){
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration{0.0};
+    auto now = start_time;
+    std::cout << "start" << std::endl;
+    std::vector<uint16_t> shape_info;
+    std::vector<uint16_t> shape_index;
+    load_table<uint16_t> (shape_info, "Shape_info");
+    load_table<uint16_t> (shape_index, "Shape_index");
+    auto get_CPEO_index = [&](const Puppet::State& state) -> uint32_t {
+        return shape_index[puppet.getShapeHash(state)] + puppet.getCornerIdx(state) * num_shapes
+            + puppet.getFlipIdx(state) * num_shapes * num_corner_permutations;
+    };
+    struct node{
+        Puppet::State state;
+        uint8_t last_face;
+    };
+    node next;
+    std::vector<uint8_t> table;
+    table.resize(num_shapes*num_corner_permutations*num_edge_orientations, 255);
+    Puppet::State state;
+    bool v = 0;
+    uint32_t count = 1;
+    uint32_t already_visited = 0;
+    uint8_t last_face = 255;
+    std::array<std::vector<node>, 2> states;
+    uint8_t num_turns = 1;
+    bool s = true;
+    puppet.getSolved(state);
+    const uint8_t repr_bit = 9; 
+    table[get_CPEO_index(state)] = 0;
+    while(true){
+        if(!states[v].empty()){
+            state = states[v].back().state;
+            last_face = states[v].back().last_face;
+            states[v].pop_back();
+        }else if(!states[!v].empty()){
+            std::cout << "switching states"<< states[!v].size() << std::endl;
+            std::cout << "num turns:" << int(num_turns) <<  std::endl;
+            std::cout << "num cases:" << int(count) <<  std::endl;
+            std::cout << "already visited:" << int(already_visited) <<  std::endl;
+            write_table<uint8_t>("corner_flip_heu_full", table);
+            std::cout << "saved" <<  std::endl;
+            now = std::chrono::high_resolution_clock::now();
+            duration = now - start_time;
+            std::cout << "time: " << duration.count() <<  std::endl << std::endl;
+            num_turns++;
+            v = !v;
+            continue;
+        }else if(s){
+            s = false;
+        }else{
+            std::cout << "end" << std::endl;
+            std::cout << "num cases:" << int(count) <<  std::endl;
+            now = std::chrono::high_resolution_clock::now();
+            duration = now - start_time;
+            std::cout << "time: " << duration.count() <<  std::endl;
+            return;
+        }
+        uint16_t info = shape_info[puppet.getShapeHash(state)];
+        uint8_t i;
+        while((i = __builtin_ctz(info)) < repr_bit){ // get idx of least significant 1
+            Move m = static_cast<Move>(i);
+            uint8_t face = getFace(m);
+            if(last_face != face){
+                Puppet::State next_state = state;
+                puppet.turn(next_state, face, getDir(m));
+                uint8_t &cur = table[get_CPEO_index(next_state)];
+                if(cur > num_turns){
+                    cur = num_turns;
+                    count++;
+                    next.state = next_state;
+                    next.last_face = face;
+                    states[!v].push_back(next);
+                    /*for(int i = 0; i < 5; i++){
+                        if(i == 2){
+                            puppet.mirrorCorners(next_state);
+                            puppet.mirrorEdges(next_state);
+                        }else{
+                            puppet.rotateCorners(next_state);
+                            puppet.rotateEdges(next_state);
+                        }
+                        table[get_CPEO_index(next_state)] = num_turns;
+                    }*/
+                    for(int i = 0; i < 3; i++){
+                        puppet.rotateCorners(next_state);
+                        puppet.rotateEdges(next_state);
+                        table[get_CPEO_index(next_state)] = num_turns;
+                    }
+                }else{already_visited++;}
+            }
+            info &= info - 1; // set least significant 1 to 0
         }
     }
 }
@@ -224,7 +319,7 @@ void Table::corner_flip_heuristic_turns(){
     }
 }
 
-void Table::corner_flip_heuristic(){
+void Table::corner_flip_heuristic_broke(){
     auto start_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration{0.0};
     auto now = start_time;

@@ -58,8 +58,9 @@ class Table {
             cor.read(reinterpret_cast<char*>(table.data()), fileSize);
         }
         void shape_table(); // [0]: valid turns + representative bit; [1]: canonial shapeidx
+        void corner_flip_heuristic_full();
         void corner_flip_heuristic_turns();
-        void corner_flip_heuristic();
+        void corner_flip_heuristic_broke();
         void corner_flip_heuristic_sym();
         void shape_edge_heuristic(); 
 };

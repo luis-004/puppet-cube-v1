@@ -166,39 +166,3 @@ void Puppet::mirrorEdges(State& state){
         }
     }
 }
-
-void Puppet::checkState(const State& state){
-    std::array<bool, NUM_CORNERS> cornerst = {};
-    std::array<bool, NUM_EDGES> edgest = {};
-    for(size_t i = 0; i < NUM_CORNERS; i++){
-        uint8_t c = state.corners[i];
-        if(cornerst[ctest[c]]){
-            std::cout << int(ctest[c]) <<  "invalid state corners: ";
-            for(auto i : state.corners){
-                std::cout << int(i) << " ";
-            }
-            for(auto i : state.edges){
-                std::cout << int(i) << " ";
-            }
-            std::cout << std::endl;
-            return;
-        }else{
-            cornerst[ctest[c]] = true;
-        }
-    }
-    for(size_t i = 0; i < NUM_EDGES; i++){
-        uint8_t c = state.edges[i];
-        if(edgest[etest[c]]){
-            std::cout << int(etest[c]) <<  "invalid state edges: ";
-            for(auto i : state.corners){
-                std::cout << int(i) << " ";
-            }
-            for(auto i : state.edges){
-                std::cout << int(i) << " ";
-            } 
-            std::cout << std::endl;
-        }else{
-            edgest[etest[c]] = true;
-        }
-    }
-}
