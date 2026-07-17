@@ -9,6 +9,8 @@
 #include <array>
 #include <algorithm>
 
+#include <bitset>
+
 class Puppet {
     static constexpr uint8_t NUM_CORNERS = 7;
     static constexpr uint8_t NUM_EDGES = 9;
@@ -43,14 +45,10 @@ class Puppet {
         {{1, 0, 1, 1}, {0, 2, 2, 2}, {2, 1, 1, 2}}
     };
 
-    static constexpr uint8_t edge_flips[3][3][2] = { // [face][dir][edge]
-        {{1, 2}, {1, 6}, {1, 7}}, 
-        {{2, 0}, {2, 8}, {2, 3}},
-        {{0, 1}, {0, 4}, {0, 5}}
-    };
+    static constexpr uint8_t edge_flips[3] = {0b1010, 0b0101, 0b1111}; // [dir]
 
     static constexpr uint8_t twist_table[3][NUM_CORNER_VALS] = { // [twist][corner]
-        {0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18}, // dont change orientation
+        {0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18}, // stay in orientation
         {0,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18,  1,  2,  3,  4,  5,  6}, // twist counterclockwise
         {0, 13, 14, 15, 16, 17, 18,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12}  // twist clockwise
     };
@@ -107,15 +105,21 @@ class Puppet {
         Puppet();
         void getSolved(State& state);
         bool testSolved(const State& state);
+
         void turn(State& state, uint8_t face, uint8_t dir);
+
         uint32_t getShapeHash(const State&);
         uint8_t getCornerIdx(const State& state);
+        std::pair<uint32_t, uint8_t> getCornerIdxs(const State& state);
         uint32_t getEPIdx(const State& state);
         uint8_t getFlipIdx(const State& state);
         std::pair<uint32_t, uint8_t> getEdgeIdxs(const State& state);
+
         void rotateCorners(State& state);
         void mirrorCorners(State& state);
         void rotateEdges(State& state);
         void mirrorEdges(State& state);
-        void solveParity(State& state);
+
+        State stateFromIdxs(uint32_t shape_hash, uint8_t corner_idx, uint32_t edge_idx, uint8_t flip_idx);
+        void fixParity(State& state);
 };

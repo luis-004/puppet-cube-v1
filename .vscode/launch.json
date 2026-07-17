@@ -40,7 +40,7 @@
         "name": "Main Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${fileDirname}/${fileBasenameNoExtension}.exe",
+        "program": "${fileDirname}/Main.exe",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
