@@ -8,8 +8,9 @@
 #include <cmath>
 #include <array>
 #include <algorithm>
-
 #include <bitset>
+
+#include "Move.hpp"
 
 class Puppet {
     static constexpr uint8_t NUM_CORNERS = 7;
@@ -106,7 +107,7 @@ class Puppet {
         void getSolved(State& state);
         bool testSolved(const State& state);
 
-        void turn(State& state, uint8_t face, uint8_t dir);
+        void turn(State& state, Move m);
 
         uint32_t getShapeHash(const State&);
         uint8_t getCornerIdx(const State& state);

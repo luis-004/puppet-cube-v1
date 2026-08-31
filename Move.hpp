@@ -6,6 +6,8 @@ enum class Move: uint8_t {
     R=0,U,F,Rc,Uc,Fc,R2,U2,F2
 };
 
+constexpr Move END = static_cast<Move>(255);
+
 static constexpr std::array<uint8_t, 3> revDir = {1, 0, 2};
 
 inline uint8_t getFace(Move m){return static_cast<uint8_t>(m) % 3;}

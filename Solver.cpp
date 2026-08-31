@@ -39,10 +39,10 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
     while(true){
         if(found[queue].empty()){
             queue = (queue + 1) % 3; 
-            std::cout << "switched to next queue"<< std::endl;
-            now = std::chrono::high_resolution_clock::now();
-            duration = now - start_time;
-            std::cout << "time: " << duration.count() <<  std::endl;
+            //std::cout << "switched to next queue"<< std::endl;
+            //now = std::chrono::high_resolution_clock::now();
+            //duration = now - start_time;
+            //std::cout << "time: " << duration.count() <<  std::endl;
             continue;
         }
         cur = found[queue].back();
@@ -56,7 +56,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
             uint8_t face = getFace(m);
             if(face != last_face){
                 next.state = state;
-                puppet.turn(next.state, face, getDir(m));
+                puppet.turn(next.state, m);
                 newval = getHeuVal(next.state);
                 if(newval == 0){
                     now = std::chrono::high_resolution_clock::now();
@@ -68,9 +68,9 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
                     }
                     alg.push_back(m);
                     std::cout << am.translate(alg) << std::endl;
-                    std::cout << "found[0]: " << found[0].size() << std::endl;
-                    std::cout << "found[1]: " << found[1].size() << std::endl;
-                    std::cout << "found[2]: " << found[2].size() << std::endl;
+                    //std::cout << "found[0]: " << found[0].size() << std::endl;
+                    //std::cout << "found[1]: " << found[1].size() << std::endl;
+                    //std::cout << "found[2]: " << found[2].size() << std::endl;
                     return alg;
                 }
                 next.alg = cur.alg;
@@ -105,4 +105,39 @@ std::vector<Move> Solver::random_state(solvefunc solve){
     Puppet::State start = puppet.stateFromIdxs(shapeHash, cornerIdx, edgeIdx, flipIdx);
     puppet.fixParity(start);
     return (this->*solve)(start);
+}
+
+void Solver::scramble_set(const std::string& filename, size_t count, solvefunc solve){
+    std::vector<std::array<Move, 50>> scrambles;
+    for(size_t i = 0; i < count; i++){
+        std::vector<Move> scramble = random_state(solve);
+        std::array<Move, 50> scramble_array;
+        scramble_array.fill(END);
+        uint8_t idx = 0;
+        for(auto m : scramble){
+            scramble_array[idx++] = m;
+        }
+        scrambles.push_back(scramble_array);
+    }
+    table.write_table<std::array<Move, 50>>(filename, scrambles);
+}
+
+void Solver::solve_scramble_set(const std::string& filename, solvefunc solve){
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration{0.0};
+    auto now = start_time;
+    std::vector<std::array<Move, 50>> scrambles;
+    table.load_table<std::array<Move, 50>>(scrambles, filename);
+    Puppet::State state;
+    for(auto s : scrambles){
+        puppet.getSolved(state);
+        for(auto m : s){
+            if(m == END) break;
+            puppet.turn(state, m);
+        }
+        (this->*solve)(state);
+    }
+    now = std::chrono::high_resolution_clock::now();
+    duration = now - start_time;
+    std::cout << "endtime: " << duration.count() << std::endl;
 }

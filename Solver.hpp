@@ -31,4 +31,6 @@ class Solver{
 
         using solvefunc = std::vector<Move> (Solver::*)(const Puppet::State&);
         std::vector<Move> random_state(solvefunc solve);
+        void scramble_set(const std::string& filename, size_t count, solvefunc solve);
+        void solve_scramble_set(const std::string& filename, solvefunc solve);
 };

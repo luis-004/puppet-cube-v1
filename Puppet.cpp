@@ -10,7 +10,10 @@ bool Puppet::testSolved(const State& state){
     return (state.corners == solved_corners) && (state.edges == solved_edges);
 }
 
-void Puppet::turn(State& state, uint8_t face, uint8_t dir){
+void Puppet::turn(State& state, Move m){
+    auto face = getFace(m);
+    auto dir = getDir(m);
+
     auto corner_idxs = permute_corners[face];
     auto edge_idxs = permute_edges[face];
     auto& corners = state.corners;

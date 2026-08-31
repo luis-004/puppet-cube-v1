@@ -25,6 +25,7 @@ void Table::shape_table(){
     bool v = 0;
     uint16_t index = 1;
     uint16_t distinct = 1;
+    //size_t already_visited = 0;
     std::array<std::vector<std::vector<Move>>, 2> algs;
     std::vector<Move> alg = {};
     std::vector<uint16_t> info_table;
@@ -33,8 +34,8 @@ void Table::shape_table(){
     std::vector<uint16_t> index_table;
     info_table.resize(shape_table_size);
     DCA_table.resize(shape_table_size);
-    index_table.assign(shape_table_size, num_shapes);
-    repr_index_table.resize(shape_table_size, num_distinct_shapes);
+    index_table.assign(shape_table_size, num_shapes*2);
+    repr_index_table.resize(shape_table_size, 65535);
     uint8_t num_turns = 1;
     bool s = true;
     puppet.getSolved(state);
@@ -51,13 +52,14 @@ void Table::shape_table(){
             ps.get_cube_shape(shape);
             for(auto move : alg){
                 ps.turn(shape, getFace(move), getDir(move));
-                puppet.turn(state, getFace(move), getDir(move));
+                puppet.turn(state, move);
             }
             last_face = getFace(alg.back());
         }else if(!algs[!v].empty()){
             std::cout << "num turns:" << int(num_turns) <<  std::endl;
             std::cout << "num cases:" << int(index) <<  std::endl;
             std::cout << "num distinct cases:" << int(distinct) <<  std::endl;
+            //std::cout << "already visited:" << int(already_visited) <<  std::endl;
             now = std::chrono::high_resolution_clock::now();
             duration = now - start_time;
             std::cout << "time: " << duration.count() <<  std::endl << std::endl;
@@ -93,7 +95,7 @@ void Table::shape_table(){
                         HT_possible = true;
                         continue;
                     }
-                    puppet.turn(state, face, dir);
+                    puppet.turn(state, getMove(face, dir));
                     uint32_t new_hash = puppet.getShapeHash(state);
                     if(index_table[new_hash] > index){
                         index_table[new_hash] = index++;
@@ -101,7 +103,9 @@ void Table::shape_table(){
                         bool new_singular = true;
                         for(int i = 0; i < 5; i++){
                             i == 2 ? puppet.mirrorCorners(similar_state) : puppet.rotateCorners(similar_state);
+                            //std::cout << int(puppet.getShapeHash(similar_state)) << std::endl;
                             if(repr_index_table[puppet.getShapeHash(similar_state)] < distinct){
+                                //std::cout << "sym visited: " << int(puppet.getShapeHash(similar_state)) << std::endl;
                                 repr_index_table[new_hash] = repr_index_table[puppet.getShapeHash(similar_state)];
                                 new_singular = false;
                                 break;
@@ -112,11 +116,17 @@ void Table::shape_table(){
                             info_table[new_hash] |= (1u << repr_bit);
                         }
                         alg.push_back(getMove(face, dir));
+                        //std::cout << am.translate(alg) << " "<< int(new_hash) <<  " " << int(index - 1) << std::endl;
                         algs[!v].push_back(alg);
                         alg.pop_back();
-                    }
+                    }/*else{
+                        already_visited++;
+                        alg.push_back(getMove(face, dir));
+                        std::cout << am.translate(alg) << " "<< int(new_hash) << " " << " already visited" << std::endl;
+                        alg.pop_back();
+                    }*/
                     ps.turn(shape, face, getRevDir(dir));
-                    puppet.turn(state, face, getRevDir(dir));
+                    puppet.turn(state, getMove(face, getRevDir(dir)));
                     HT_possible = true;
                 }
             }
@@ -187,7 +197,7 @@ void Table::table_full(const std::string& filename, const uint64_t entries, Inde
             uint8_t face = getFace(m);
             if(last_face != face){
                 Puppet::State next_state = state;
-                puppet.turn(next_state, face, getDir(m));
+                puppet.turn(next_state, m);
                 uint8_t &cur = table[(this->*idxfunc)(next_state)];
                 if(cur > num_turns){
                     cur = num_turns;
@@ -225,19 +235,18 @@ void Table::table_full_turn(const uint64_t entries, IndexFunc idxfunc){
     std::chrono::duration<double> duration{0.0};
     auto now = start_time;
     std::cout << "start" << std::endl;
-    std::vector<uint16_t> shape_index;
     load_table<uint16_t> (shape_index, "Shape_index");
     std::vector<Move> alg = {};
     std::array<std::vector<std::vector<Move>>, 2> algs;
     std::vector<uint8_t> table;
-    table.resize(num_shapes*num_corner_permutations*num_edge_orientations, 255);
+    table.resize(entries, 255);
     Puppet::State state;
     PuppetShape::Shape shape;
     bool v = 0;
     uint32_t count = 1;
-    uint32_t total_count = 1;
+    //uint32_t total_count = 1;
     uint32_t already_visited = 0;
-    uint32_t sym_visited = 0;
+    //uint32_t sym_visited = 0;
     uint8_t last_face = 255;
     uint8_t num_turns = 1;
     bool s = true;
@@ -249,19 +258,19 @@ void Table::table_full_turn(const uint64_t entries, IndexFunc idxfunc){
             alg = algs[v].back();
             algs[v].pop_back();
             puppet.getSolved(state);
-            //ps.get_cube_shape(shape); 
+            ps.get_cube_shape(shape); 
             for(auto m : alg){
-                //ps.turn(shape, getFace(m), getDir(m));
-                puppet.turn(state, getFace(m), getDir(m));
+                ps.turn(shape, getFace(m), getDir(m));
+                puppet.turn(state, m);
             }
             last_face = getFace(alg.back());
         }else if(!algs[!v].empty()){
             std::cout << "switching states"<< algs[!v].size() << std::endl;
             std::cout << "num turns:" << int(num_turns) <<  std::endl;
             std::cout << "num cases:" << int(count) <<  std::endl;
-            std::cout << "num total cases:" << int(total_count) <<  std::endl;
+            //std::cout << "num total cases:" << int(total_count) <<  std::endl;
             std::cout << "already visited:" << int(already_visited) <<  std::endl;
-            std::cout << "sym visited:" << int(sym_visited) <<  std::endl;
+            //std::cout << "sym visited:" << int(sym_visited) <<  std::endl;
             now = std::chrono::high_resolution_clock::now();
             duration = now - start_time;
             std::cout << "time: " << duration.count() <<  std::endl << std::endl;
@@ -284,18 +293,18 @@ void Table::table_full_turn(const uint64_t entries, IndexFunc idxfunc){
             for(uint8_t t = 0; t < 3; t++){
                 if((HT_possible || t != 2) && ps.turn(shape, face, t)){
                     Puppet::State next_state = state;
-                    puppet.turn(next_state, face, t);
+                    puppet.turn(next_state, getMove(face, t));
                     int idx = (this->*idxfunc)(next_state);
-                    //std::cout << idx << " ";
+                    std::cout << idx << " ";
                     if(table[idx] > num_turns){
                         table[idx] = num_turns;
                         count++;
                         //total_count++;
                         alg.push_back(getMove(face, t));
-                        //std::cout << am.translate(alg) << std::endl;
+                        std::cout << am.translate(alg) << std::endl;
                         algs[!v].push_back(alg);
                         alg.pop_back();
-                        for(int j = 0; j < 5; j++){
+                        /*for(int j = 0; j < 5; j++){
                             if(j == 2){
                                 puppet.mirrorCorners(next_state);
                                 puppet.mirrorEdges(next_state);
@@ -313,7 +322,7 @@ void Table::table_full_turn(const uint64_t entries, IndexFunc idxfunc){
                                 //std::cout << " sym visited: " << int(table[idx]) << std::endl;
                                 sym_visited++;
                             }
-                        }
+                        }*/
                     }else{
                         alg.push_back(getMove(face, t));
                         std::cout << am.translate(alg) << " ";

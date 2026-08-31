@@ -31,12 +31,16 @@ int main(){
     AlgMani am;
     Table table;
     //table.shape_table();
-    string input;
     //table.table_full("shape_ep_full.heu", num_shapes*num_edge_permutations, &Table::SEP_index);
+    //table.table_full("corner_flip_full.heu", num_shapes*num_corner_permutations*num_edge_orientations, &Table::CEO_index);
+    //table.table_full_turn(num_shapes*num_corner_permutations*num_edge_orientations, &Table::CEO_index);
+    //string input;
     std::cout << "loading tables" << std::endl;
     Solver solver("Shape_index", "Shape_info", "corner_flip_full.heu", "shape_ep_full.heu");
     std::cout << "loaded" << std::endl;
-    auto scramble = solver.random_state(&Solver::astar);
+    solver.solve_scramble_set("scrambles_500", &Solver::astar);
+    //solver.scramble_set("scrambles_500", 500, &Solver::astar);
+    /*auto scramble = solver.random_state(&Solver::astar);
     std::cout << "Ready" << std::endl;
     size_t count = 0;
     while(true){
@@ -46,7 +50,7 @@ int main(){
         if (input == "c") system("cls");
         //system("cls");
         scramble = solver.random_state(&Solver::astar);
-    }
-    cin.get();
+    }*/
+    //cin.get();
     return 0;
 }
