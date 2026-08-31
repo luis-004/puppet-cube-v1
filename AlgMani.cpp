@@ -140,7 +140,7 @@ std::array<uint8_t, 6> AlgMani::getRUF(std::vector<Move> alg){
     return turns;
 }
 
-std::vector<Move>  AlgMani::swap(std::vector<Move> alg, uint8_t stay){
+std::vector<Move> AlgMani::swap(std::vector<Move> alg, uint8_t stay){
     std::vector<Move> swap_alg;
     uint8_t new_face;
     for(auto turn : alg){

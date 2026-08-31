@@ -19,33 +19,62 @@
 #include "Move.hpp"
 #include "AlgMani.hpp"
 
-class Table {
+static constexpr size_t shape_table_size = 102060; // (7 choose 3) * 4 * 3^6
+static constexpr size_t num_shapes = 13174;
+static constexpr size_t CF_size = 2214*36*256;
+static constexpr size_t SE_size = 2214*362880;
+static constexpr size_t num_distinct_shapes = 2214;
+static constexpr size_t num_corner_permutations = 36;
+static constexpr size_t num_edge_permutations = 362880;
+static constexpr size_t num_edge_orientations = 256;
+static constexpr uint8_t repr_bit = 9; 
+
+class Table{
     Puppet puppet;
     PuppetShape ps;
     AlgMani am;
 
-    static constexpr uint32_t shape_table_size = 102060; // (7 choose 3) * 4 * 3^6
-    static constexpr uint32_t num_shapes = 13174;
-    static constexpr uint32_t CF_size = 2214*36*256;
-    static constexpr uint32_t SE_size = 2214*362880;
-    static constexpr uint32_t num_distinct_shapes = 2214;
-    static constexpr uint32_t num_corner_permutations = 36;
-    static constexpr uint32_t num_edge_permutations = 362880;
-    static constexpr uint32_t num_edge_orientations = 256;
-
     public:
         Table();
-        /*void write_table(const std::string& filename, const void* data, size_t size) {
-            std::ofstream os(filename, std::ios::binary | std::ios::trunc);
-            os.write(reinterpret_cast<const char*>(data), size);
-            os.close();
-        }*/
-        template <typename E> void write_table(const std::string& filename, const std::vector<E>& data) {
+        std::vector<uint16_t> shape_info;
+        std::vector<uint16_t> shape_index;
+        std::vector<uint8_t> table_CF;
+        std::vector<uint8_t> table_SE;
+
+        template <typename E> void write_table(const std::string& filename, const std::vector<E>& data){
             std::ofstream os(filename, std::ios::binary | std::ios::trunc);
             //std::cout << "filename: "<< std::endl;
             //std::cout << std::filesystem::absolute(filename) << std::endl;
             os.write(reinterpret_cast<const char*>(data.data()), data.size() * sizeof(E));
         }
+        template <typename E> void write_large_table(const std::string& filename, const std::vector<E>& data){
+            std::ofstream os(filename, std::ios::binary | std::ios::trunc);
+
+            if (!os) {
+                std::cerr << "error while opening file!" << std::endl;
+                return;
+            }
+
+            const char* ptr = reinterpret_cast<const char*>(data.data());
+            size_t remaining = data.size() * sizeof(E);
+
+            constexpr size_t chunkSize = 256ull * 1024 * 1024;
+
+            while (remaining > 0) {
+                size_t toWrite = std::min(remaining, chunkSize);
+
+                os.write(ptr, static_cast<std::streamsize>(toWrite));
+
+                if (!os) {
+                    std::cerr << "error while writing!" << std::endl;
+                    return;
+                }
+
+                ptr += toWrite;
+                remaining -= toWrite;
+            }
+        }
+
         template <typename E> void load_table(std::vector<E>& table, const std::string& file){
             std::ifstream cor(file, std::ios::binary | std::ios::ate); // 'ate' springt zum Ende
             //std::cout << "file: "<< std::endl;
@@ -57,10 +86,39 @@ class Table {
             table.resize(numEntries); 
             cor.read(reinterpret_cast<char*>(table.data()), fileSize);
         }
-        void shape_table(); // [0]: valid turns + representative bit; [1]: canonial shapeidx
-        void corner_flip_heuristic_full();
-        void corner_flip_heuristic_turns();
-        void corner_flip_heuristic_broke();
-        void corner_flip_heuristic_sym();
-        void shape_edge_heuristic(); 
+        template <typename E> void load_large_table(std::vector<E>& table, const std::string& file){
+            std::ifstream cor(file, std::ios::binary | std::ios::ate);
+            if (!cor) return;
+
+            std::streamsize fileSize = cor.tellg();
+            cor.seekg(0, std::ios::beg);
+
+            size_t numEntries = static_cast<size_t>(fileSize) / sizeof(E);
+            table.assign(numEntries, 0); // Vektor vorbereiten
+
+            char* buffer = reinterpret_cast<char*>(table.data());
+            std::streamsize remaining = fileSize;
+            std::streamsize chunkSize = 512 * 1024 * 1024; // 512 MB Blöcke
+
+            while (remaining > 0) {
+                std::streamsize toRead = std::min(remaining, chunkSize);
+                cor.read(buffer, toRead);
+                
+                std::streamsize actualRead = cor.gcount();
+                if (actualRead == 0) break; // Fehler oder Dateiende
+
+                buffer += actualRead;
+                remaining -= actualRead;
+            }
+        }
+
+        size_t CEO_index(const Puppet::State&);
+        size_t SEP_index(const Puppet::State&);
+        size_t EP_index(const Puppet::State&);
+
+        using IndexFunc = size_t (Table::*)(const Puppet::State&);
+        void shape_table();
+        //void corner_table();
+        void table_full(const std::string& filename, const uint64_t entries, IndexFunc idxfunc);
+        void table_full_turn(const uint64_t entries, IndexFunc idxfunc);
 };

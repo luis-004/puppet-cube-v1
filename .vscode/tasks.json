@@ -48,6 +48,7 @@
 				"${fileDirname}/Puppet.cpp",
 				"${fileDirname}/AlgMani.cpp",
 				"${fileDirname}/Table.cpp",
+				"${fileDirname}/Solver.cpp",
 				"-o",
 				"${fileDirname}/Main.exe"
 			],

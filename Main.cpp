@@ -21,84 +21,38 @@
 #include "Move.hpp"
 #include "Puppet.hpp"
 #include "Table.hpp"
+#include "Solver.hpp"
 
 using namespace std;
 
 int main(){
-    PuppetShape ps;
+    string input;
     Puppet p;
-    //PuppetShape::Shape shape;
-    //Puppet::State state;
     AlgMani am;
     Table table;
-    table.corner_flip_heuristic_full();
+    //cout << "SHAPE TABLES:" << endl;
     //table.shape_table();
-    /*std::vector<uint16_t> info_table;
-    std::vector<uint16_t> index_table;
-    std::vector<uint8_t> tableDCA;
-    std::vector<uint16_t> total_index_table;
-    table.load_table<uint16_t>(info_table, "Shape_info");
-    table.load_table<uint16_t>(index_table, "Shape_index");
-    table.load_table<uint8_t>(tableDCA, "ShapeDCA");
-    table.load_table<uint16_t>(total_index_table, "Shape_singular");
-    for(size_t i = 0; i < info_table.size(); i++){
-        if(info_table[i] != 0){
-
-            std::cout << "index:" <<  i << " info: " << std::bitset<16>(info_table[i]) << " singular: " << int(index_table[i]) << " dca: " << std::bitset<8>(tableDCA[i]) << " total: " << int(total_index_table[i]) << std::endl;
-        }
-    }*/
-
-    /*//auto alg = am.translateYX2(am.translateBack("U' R U' R' U2 R U2 R' F' U R' F R U2 R' F2 R F"));
-    //auto alg = am.translateYX2(am.translateBack("R U' R' U' R' U' R U R U"));
-    //auto alg = am.translateYX2(am.translateBack("U U2 U"));
-    auto alg = am.translateYX2(am.translateBack("U R U R2 F2 R F R' F2 R U2"));
-    //auto alg = am.translateBack("U R");
-    cout << am.translate(alg) << endl;
-    ps.get_cube_shape(shape);
-    p.getSolved(state);
-    cout << endl << int(p.getShapeHash(state)) << " " << int(p.getCornerIdx(state)) << endl;
-    cout << int(p.getEdgeIdxs(state).first) << " " << int(p.getEdgeIdxs(state).second) << endl;
-    for(auto move : alg){
-        cout << am.translate({move}) << endl;
-        if(ps.turn(shape, getFace(move), getDir(move))){
-            p.turn(state, getFace(move), getDir(move));
-        }
-        for(auto i : state.corners){
-            cout << int(i) << " ";
-        }
-        for(auto i : state.edges){
-            cout << int(i) << " ";
-        }
-        cout << endl << int(p.getShapeHash(state)) << " " << int(p.getCornerIdx(state)) << endl;
-        cout << int(p.getEdgeIdxs(state).first) << " " << int(p.getEdgeIdxs(state).second) << endl;
+    //cout << "CORNERS FLIPS:" << endl;
+    //table.table_full("corner_flip_full.heu", num_shapes*num_corner_permutations*num_edge_orientations, &Table::CEO_index);
+    //cout << "SHAPE EDGES:" << endl;
+    //table.table_full("shape_ep_full.heu", num_shapes*num_edge_permutations, &Table::SEP_index);
+    //table.table_full_turn(num_shapes*num_corner_permutations*num_edge_orientations, &Table::CEO_index);
+    std::cout << "loading tables" << std::endl;
+    Solver solver("Shape_index", "Shape_info", "corner_flip_full.heu", "shape_ep_full.heu");
+    std::cout << "loaded" << std::endl;
+    //solver.scramble_set("scrambles_500", 500, &Solver::astar);
+    solver.solve_scramble_set("scrambles_500", &Solver::astar);
+    /*auto scramble = solver.random_state(&Solver::astar);
+    std::cout << "Ready" << std::endl;
+    size_t count = 0;
+    while(true){
+        getline(std::cin, input);
+        std::cout << ++count << " " << am.translate(am.translateYX2(am.reverse(scramble))) << scramble.size() << endl;
+        if (input == "q") break;
+        if (input == "c") system("cls");
+        //system("cls");
+        scramble = solver.random_state(&Solver::astar);
     }
-    p.rotateCorners(state);
-    p.rotateEdges(state);
-    p.rotateCorners(state);
-    p.rotateEdges(state);
-    p.mirrorCorners(state);
-    p.mirrorEdges(state);
-    p.rotateCorners(state);
-    p.rotateEdges(state);
-    p.rotateCorners(state);
-    p.rotateEdges(state);
-    p.mirrorCorners(state);
-    p.mirrorEdges(state);
-    cout  << endl << int(p.getShapeHash(state)) << " " << int(p.getCornerIdx(state)) << endl;
-    for(auto move : am.reverse(alg)){
-        cout << am.translate({move}) << endl;
-        if(ps.turn(shape, getFace(move), getDir(move))){
-            p.turn(state, getFace(move), getDir(move));
-        }
-        for(auto i : state.corners){
-            cout << int(i) << " ";
-        }
-        for(auto i : state.edges){
-            cout << int(i) << " ";
-        }
-        cout << endl << int(p.getShapeHash(state)) << " " << int(p.getCornerIdx(state)) << endl;
-        cout << int(p.getEdgeIdxs(state).first) << " " << int(p.getEdgeIdxs(state).second) << endl;
-    }*/
-    //std::cout << std::filesystem::current_path() << "\n";
+    cin.get();*/
     return 0;
 }

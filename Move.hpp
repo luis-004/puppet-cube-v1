@@ -6,11 +6,7 @@ enum class Move: uint8_t {
     R=0,U,F,Rc,Uc,Fc,R2,U2,F2
 };
 
-/*static constexpr std::array<Move, 9> revDir = {
-    Move::Rc, Move::Uc, Move::Fc,
-    Move::R,  Move::U,  Move::F,
-    Move::R2, Move::U2, Move::F2
-};*/
+constexpr Move END = static_cast<Move>(255);
 
 static constexpr std::array<uint8_t, 3> revDir = {1, 0, 2};
 
