@@ -60,13 +60,13 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
                 if(newval == 0){
                     now = std::chrono::high_resolution_clock::now();
                     duration = now - start_time;
-                    std::cout << "solution found. time: " << duration.count() << std::endl;
+                    //std::cout << "solution found. time: " << duration.count() << std::endl;
                     std::vector<Move> alg;
                     for(uint8_t i = 0; i < cur.len; i++){
                         alg.push_back(cur.alg[i]);
                     }
                     alg.push_back(m);
-                    std::cout << am.translate(alg) << std::endl;
+                    //std::cout << am.translate(alg) << std::endl;
                     //std::cout << "found[0]: " << found[0].size() << std::endl;
                     //std::cout << "found[1]: " << found[1].size() << std::endl;
                     //std::cout << "found[2]: " << found[2].size() << std::endl;
@@ -167,4 +167,113 @@ void Solver::solve_scramble_set(const std::string& filename, solvefunc solve){
     now = std::chrono::high_resolution_clock::now();
     duration = now - start_time;
     std::cout << "endtime: " << duration.count() << std::endl;
+}
+
+void Solver::god(solvefunc solve){
+    uint8_t maxCF = 27;
+    uint8_t maxSE = 30;
+
+    size_t gods_number = 0;
+    while(maxSE + maxCF > 0){
+        std::cout << "new era: " << size_t(maxCF) << " " << size_t(maxSE) << std::endl;
+        for(size_t i = 0; i < num_shapes * num_corner_permutations * num_edge_orientations; i++){
+            if(table.table_CF[i] == maxCF){
+                size_t shape = i / (num_corner_permutations * num_edge_orientations);
+                for(size_t j = shape * num_edge_permutations; j <  (shape + 1) * num_edge_permutations; j++){
+                    if(table.table_SE[j] == maxSE){
+                        size_t shapeHash = 0;
+                        for(shapeHash = 0; shapeHash < shape_table_size; shapeHash++){
+                            if(table.shape_index[shapeHash] == shape) break;
+                        }
+                        Puppet::State start = puppet.stateFromIdxs(shapeHash, 
+                        (i % (num_corner_permutations * num_edge_orientations)) / num_edge_orientations,
+                        j % (num_edge_permutations), 
+                        (i % (num_corner_permutations * num_edge_orientations)) % num_edge_orientations);
+                        puppet.fixParity(start);
+                        auto alg = (this->*solve)(start);
+                        if(alg.size() > gods_number){
+                            gods_number = alg.size();
+                            std::cout << size_t(puppet.getShapeHash(start)) << " " 
+                            << size_t(puppet.getCornerIdx(start)) << " " 
+                            << size_t(puppet.getEPIdx(start)) << " " 
+                            << size_t(puppet.getFlipIdx(start)) << std::endl;     
+                            std::cout << am.translate(am.translateYX2(am.reverse(alg))) << " " << size_t(alg.size()) << std::endl;
+                        }                      
+                    }
+                }
+            }
+        }
+        maxSE > maxCF ? maxSE-- : maxCF--;
+    }
+}
+
+void Solver::gods_mirror(solvefunc solve){
+    Puppet::State state;
+    puppet.getSolved(state);
+    std::vector<uint32_t> sym_corners;
+    for(size_t corner = 0; corner <  num_shapes * num_corner_permutations; corner++){
+        Puppet::State start = puppet.stateFromIdxs(corner/num_corner_permutations, corner%num_corner_permutations,
+        puppet.getEPIdx(state), puppet.getFlipIdx(state));
+        Puppet::State sym = start;
+        for(int j = 0; j < 5; j++){
+            if(j == 2){
+                puppet.mirror(sym);
+            }else{
+                puppet.rotate(sym);
+            }
+            if(sym == start){
+                sym_corners.push_back(corner);
+                break;
+            }
+        }
+    }
+    std::cout << "all symmetric corner cases found" << std::endl;
+
+    puppet.getSolved(state);
+    std::vector<uint32_t> sym_edges;
+    for(size_t edge = 0; edge <  num_edge_permutations * num_edge_orientations; edge++){
+        Puppet::State start = puppet.stateFromIdxs(puppet.getShapeHash(state), puppet.getCornerIdx(state),
+        edge / num_edge_orientations, edge % num_edge_orientations);
+        Puppet::State sym = start;
+        for(int j = 0; j < 5; j++){
+            if(j == 2){
+                puppet.mirror(sym);
+            }else{
+                puppet.rotate(sym);
+            }
+            if(sym == start){
+                sym_edges.push_back(edge);
+                break;
+            }
+        }
+    }
+    std::cout << "all symmetric edge cases found" << std::endl;
+
+    size_t gods_number = 0;
+    for(size_t corners = 0; corners < sym_corners.size(); corners++){
+        std::cout << "new corner era" << std::endl;
+        for(size_t edges = 0; edges < sym_edges.size(); edges++){
+            size_t shape = sym_corners[corners]/num_corner_permutations;
+            if(table.table_CF[shape * num_corner_permutations * num_edge_orientations +  
+            sym_corners[corners]%num_corner_permutations * num_edge_orientations + sym_edges[edges] % num_edge_orientations] +
+            table.table_SE[shape * num_edge_permutations + sym_edges[edges] / num_edge_orientations] > 40){
+                size_t shapeHash = 0;
+                for(shapeHash = 0; shapeHash < shape_table_size; shapeHash++){
+                    if(table.shape_index[shapeHash] == shape) break;
+                }
+                Puppet::State start = puppet.stateFromIdxs(shapeHash, sym_corners[corners]%num_corner_permutations,
+                sym_edges[edges] / num_edge_orientations, sym_edges[edges] % num_edge_orientations);
+                puppet.fixParity(start);
+                auto alg = (this->*solve)(start);
+                if(alg.size() > gods_number){
+                    gods_number = alg.size();
+                    std::cout << size_t(puppet.getShapeHash(start)) << " " 
+                    << size_t(puppet.getCornerIdx(start)) << " " 
+                    << size_t(puppet.getEPIdx(start)) << " " 
+                    << size_t(puppet.getFlipIdx(start)) << std::endl;     
+                    std::cout << am.translate(am.translateYX2(am.reverse(alg))) << " " << size_t(alg.size()) << std::endl;
+                }       
+            }          
+        }
+    }
 }

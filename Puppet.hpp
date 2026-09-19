@@ -110,5 +110,5 @@ class Puppet{
         void mirror(State& state);
 
         State stateFromIdxs(uint32_t shape_hash, uint8_t corner_idx, uint32_t edge_idx, uint8_t flip_idx);
-        void fixParity(State& state);
+        bool fixParity(State& state);
 };

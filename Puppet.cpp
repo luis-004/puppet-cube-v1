@@ -273,7 +273,7 @@ Puppet::State Puppet::stateFromIdxs(uint32_t shape_hash, uint8_t corner_idx, uin
     return state;
 }
 
-void Puppet::fixParity(State& state){
+bool Puppet::fixParity(State& state){
     bool parity = false;
     uint8_t save;
     State copy = state;
@@ -307,5 +307,7 @@ void Puppet::fixParity(State& state){
         save = state.edges[0]; 
         state.edges[0] = state.edges[1];
         state.edges[1] = save;
+        return true;
     }
+    return false;
 }
