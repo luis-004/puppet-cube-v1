@@ -44,7 +44,7 @@ int main(){
     //solver.gods_mirror(&Solver::astar);
     //std::cout << "loaded" << std::endl;
     //solver.scramble_set("scrambles_500_sorted", 500, &Solver::astar, true);
-    solver.solve_scramble_set("scrambles_500_sorted", &Solver::astar);
+    solver.solve_scramble_set("results/500_sorted_qtm", &Solver::astar);
     /*auto scramble = solver.random_state(&Solver::astar);
     std::cout << "Ready" << std::endl;
     size_t count = 0;
