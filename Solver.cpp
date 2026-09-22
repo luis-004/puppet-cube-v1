@@ -60,13 +60,13 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
                 if(newval == 0){
                     now = std::chrono::high_resolution_clock::now();
                     duration = now - start_time;
-                    //std::cout << "solution found. time: " << duration.count() << std::endl;
+                    std::cout << "solution found. time: " << duration.count() << std::endl;
                     std::vector<Move> alg;
                     for(uint8_t i = 0; i < cur.len; i++){
                         alg.push_back(cur.alg[i]);
                     }
                     alg.push_back(m);
-                    //std::cout << am.translate(alg) << std::endl;
+                    std::cout << am.translate(alg) << std::endl;
                     //std::cout << "found[0]: " << found[0].size() << std::endl;
                     //std::cout << "found[1]: " << found[1].size() << std::endl;
                     //std::cout << "found[2]: " << found[2].size() << std::endl;
@@ -131,13 +131,13 @@ std::vector<Move> Solver::random_state(solvefunc solve){
     }
     std::cout << std::endl;*/
     puppet.fixParity(start);
-    return(this->*solve)(start);
+    return am.reverse((this->*solve)(start));
 }
 
-void Solver::scramble_set(const std::string& filename, size_t count, solvefunc solve){
+void Solver::scramble_set(const std::string& filename, size_t count, solvefunc solve, bool sort){
     std::vector<std::array<Move, 50>> scrambles;
     for(size_t i = 0; i < count; i++){
-        std::vector<Move> scramble = am.reverse(random_state(solve));
+        std::vector<Move> scramble = random_state(solve);
         std::array<Move, 50> scramble_array;
         scramble_array.fill(END);
         uint8_t idx = 0;
@@ -146,6 +146,17 @@ void Solver::scramble_set(const std::string& filename, size_t count, solvefunc s
         }
         scrambles.push_back(scramble_array);
     }
+
+    if (sort) {
+        std::sort(scrambles.begin(), scrambles.end(),
+            [](const auto& a, const auto& b) {
+                auto length = [](const auto& scramble) {
+                    return std::find(scramble.begin(), scramble.end(), END) - scramble.begin();
+                };
+                return length(a) < length(b);
+            });
+    }
+
     table.write_table<std::array<Move, 50>>(filename, scrambles);
 }
 
@@ -156,12 +167,23 @@ void Solver::solve_scramble_set(const std::string& filename, solvefunc solve){
     std::vector<std::array<Move, 50>> scrambles;
     table.load_table<std::array<Move, 50>>(scrambles, filename);
     Puppet::State state;
+    auto scount = 0; 
     for(auto s : scrambles){
+        std::cout << int(scount++) <<"  ";
         puppet.getSolved(state);
+        auto count = 0; 
         for(auto m : s){
             if(m == END) break;
             puppet.turn(state, m);
+            count ++;
         }
+        for(auto i: state.corners){
+            std::cout << int(i) << " ";
+        }
+        for(auto i: state.edges){
+            std::cout << int(i) << " ";
+        }
+        std::cout << "  " << int(count) << std::endl;
         (this->*solve)(state);
     }
     now = std::chrono::high_resolution_clock::now();

@@ -85,7 +85,7 @@ void Table::shape_table(){
             bool HT_possible = false;
             for(uint8_t dir = 0; dir < 3; ++dir){
                 if((HT_possible || dir != 2) && ps.turn(shape, face, dir)){
-                    info_table[hash] |= (1u << (face + dir*3)); // add valid turn
+                    info_table[hash] |= (1u << (face*3 + dir)); // add valid turn
                     DCA_table[hash] |= (1u << 0);
                     if(dir == 2){
                         DCA_table[hash] |= (1u << (face + 1));

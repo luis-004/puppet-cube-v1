@@ -36,20 +36,21 @@ int main(){
     //cout << "CORNERS FLIPS:" << endl;
     //table.table_full("corner_flip_full.heu", num_shapes*num_corner_permutations*num_edge_orientations, &Table::CEO_index);
     //cout << "SHAPE EDGES:" << endl;
+    //table.shape_table();
     //table.table_full("shape_ep_full.heu", num_shapes*num_edge_permutations, &Table::SEP_index);
     //table.table_full_turn(num_shapes*num_corner_permutations*num_edge_orientations, &Table::CEO_index);
     //std::cout << "loading tables" << std::endl;
     Solver solver("Shape_index", "Shape_info", "corner_flip_full.heu", "shape_ep_full.heu");
-    solver.gods_mirror(&Solver::astar);
+    //solver.gods_mirror(&Solver::astar);
     //std::cout << "loaded" << std::endl;
-    //solver.scramble_set("scrambles_500", 500, &Solver::astar);
-    //solver.solve_scramble_set("scrambles_500", &Solver::astar);
+    //solver.scramble_set("scrambles_500_sorted", 500, &Solver::astar, true);
+    solver.solve_scramble_set("scrambles_500_sorted", &Solver::astar);
     /*auto scramble = solver.random_state(&Solver::astar);
     std::cout << "Ready" << std::endl;
     size_t count = 0;
     while(true){
         getline(std::cin, input);
-        std::cout << ++count << " " << am.translate(am.translateYX2(am.reverse(scramble))) << scramble.size() << endl;
+        std::cout << ++count << " " << am.translate(am.translateYX2(scramble)) << scramble.size() << endl;
         if (input == "q") break;
         if (input == "c") system("cls");
         //system("cls");

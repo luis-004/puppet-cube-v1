@@ -14,10 +14,10 @@
 
 class AlgMani {
     static constexpr std::string_view Moves[] = {
-        "R", "U", "F", "R'", "U'", "F'", "R2", "U2", "F2"
+        "R", "R'", "R2", "U", "U'", "U2", "F", "F'", "F2"
     };
     static constexpr std::string_view LeftieMoves[] = {
-        "L'", "U'", "F'", "L", "U", "F", "L2", "U2", "F2"
+        "L'", "L", "L2", "U'", "U", "U2", "F'", "F", "F2"
     };
     static constexpr uint8_t rev_dir[3] = {1, 0, 2};
     public:
