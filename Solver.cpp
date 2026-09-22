@@ -166,23 +166,23 @@ void Solver::solve_scramble_set(const std::string& filename, solvefunc solve){
     std::vector<std::array<Move, 50>> scrambles;
     table.load_table<std::array<Move, 50>>(scrambles, filename);
     Puppet::State state;
-    auto scount = 0; 
+    //auto scount = 0; 
     for(auto s : scrambles){
-        std::cout << int(scount++) <<"  ";
+        //std::cout << int(scount++) <<"  ";
         puppet.getSolved(state);
-        auto count = 0; 
+        //auto count = 0; 
         for(auto m : s){
             if(m == END) break;
             puppet.turn(state, m);
-            count ++;
+            //count ++;
         }
-        for(auto i: state.corners){
+        /*for(auto i: state.corners){
             std::cout << int(i) << " ";
         }
         for(auto i: state.edges){
             std::cout << int(i) << " ";
-        }
-        std::cout << "  " << int(count) << std::endl;
+        }*/
+        //std::cout << "  " << int(count) << std::endl;
         (this->*solve)(state);
     }
     now = std::chrono::high_resolution_clock::now();
