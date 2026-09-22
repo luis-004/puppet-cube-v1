@@ -14,12 +14,11 @@
 
 class AlgMani {
     static constexpr std::string_view Moves[] = {
-        "R", "R'", "R2", "U", "U'", "U2", "F", "F'", "F2"
+        "R", "R'", "U", "U'", "F", "F'"
     };
     static constexpr std::string_view LeftieMoves[] = {
-        "L'", "L", "L2", "U'", "U", "U2", "F'", "F", "F2"
+        "L'", "L", "U'", "U", "F'", "F"
     };
-    static constexpr uint8_t rev_dir[3] = {1, 0, 2};
     public:
         AlgMani();
         std::string translate(const std::vector<Move>& alg);
@@ -27,9 +26,9 @@ class AlgMani {
         std::vector<Move> translateBack(const std::string& alg);
         std::vector<Move> translateYX2(std::vector<Move> alg);
         std::vector<Move> reverse(std::vector<Move> alg);
-        std::pair<std::vector<Move>, std::array<uint8_t, 6>> optimizeRUF(std::vector<Move> alg, std::array<uint8_t, 6> turns);
-        std::pair<std::vector<Move>, std::array<uint8_t, 6>> optimizeRF(std::vector<Move> alg, std::array<uint8_t, 6> turns);
-        std::array<uint8_t, 6> getRUF(std::vector<Move> alg);
+        std::pair<std::vector<Move>, std::array<uint8_t, 3>> optimizeRUF(std::vector<Move> alg, std::array<uint8_t, 3> turns);
+        std::pair<std::vector<Move>, std::array<uint8_t,3>> optimizeRF(std::vector<Move> alg, std::array<uint8_t, 3> turns);
+        std::array<uint8_t, 3> getRUF(std::vector<Move> alg);
         std::vector<Move> swap(std::vector<Move> alg, uint8_t stay);
         std::vector<Move> twist(std::vector<Move> alg, bool dir);
 };

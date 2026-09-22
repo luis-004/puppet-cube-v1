@@ -24,17 +24,15 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
     struct node{
         Puppet::State state;
         std::array<Move, 50> alg;
+        uint8_t allowed_turns;
         uint8_t len;
         uint8_t value;
     };
-    node cur;
     node next;
     Puppet::State state = start;
-    uint8_t last_face = 255;
     uint8_t queue = 0;
-    uint8_t newval = 0;
     std::array<std::vector<node>, 3> found;
-    found[0].push_back({state, {}, 0, getHeuVal(start)});
+    found[0].push_back({state, {}, 0b00111111, 0, getHeuVal(start)});
     while(true){
         if(found[queue].empty()){
             queue = (queue + 1) % 3; 
@@ -44,62 +42,63 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
             //std::cout << "time: " << duration.count() <<  std::endl;
             continue;
         }
-        cur = found[queue].back();
+        node cur = found[queue].back();
         state = cur.state;
         found[queue].pop_back();
-        if(cur.len > 0) last_face = getFace(cur.alg[cur.len-1]);
-        uint16_t info = table.shape_info[puppet.getShapeHash(state)];
+        uint8_t valid_turns = table.shape_info[puppet.getShapeHash(state)];
+        valid_turns &= cur.allowed_turns;
         uint8_t i;
-        while((i = __builtin_ctz(info)) < repr_bit){ // get idx of least significant 1
+        while((i = __builtin_ctz(valid_turns)) < repr_bit){ // get idx of least significant 1
             Move m = static_cast<Move>(i);
-            uint8_t face = getFace(m);
-            if(face != last_face){
-                next.state = state;
-                puppet.turn(next.state, m);
-                newval = getHeuVal(next.state);
-                if(newval == 0){
-                    now = std::chrono::high_resolution_clock::now();
-                    duration = now - start_time;
-                    std::cout << "solution found. time: " << duration.count() << std::endl;
-                    std::vector<Move> alg;
-                    for(uint8_t i = 0; i < cur.len; i++){
-                        alg.push_back(cur.alg[i]);
-                    }
-                    alg.push_back(m);
-                    std::cout << am.translate(alg) << std::endl;
-                    //std::cout << "found[0]: " << found[0].size() << std::endl;
-                    //std::cout << "found[1]: " << found[1].size() << std::endl;
-                    //std::cout << "found[2]: " << found[2].size() << std::endl;
-                    return alg;
+            next.state = state;
+            puppet.turn(next.state, m);
+            uint8_t newval = getHeuVal(next.state);
+            if(newval == 0){
+                now = std::chrono::high_resolution_clock::now();
+                duration = now - start_time;
+                std::cout << "solution found. time: " << duration.count() << std::endl;
+                std::vector<Move> alg;
+                for(uint8_t i = 0; i < cur.len; i++){
+                    alg.push_back(cur.alg[i]);
                 }
-                next.alg = cur.alg;
-                next.alg[cur.len] = m;          
-                next.len = cur.len + 1;
-                next.value = newval;
-                if(cur.value > newval + 1 || cur.value < newval - 1){
-                    std::cout << "heuristic invalid: " << std::endl;
-                    std::cout << int(getHeuVal(cur.state)) << std::endl;
-                    for(size_t i = 0; i < 7; i++){
-                        std::cout << int(cur.state.corners[i]) << " ";
-                    }
-                    std::cout << std::endl;
-                    for(size_t i = 0; i < 9; i++){
-                        std::cout << int(cur.state.edges[i]) << " ";
-                    }
-                    std::cout << std::endl;
-                    std::cout << int(getHeuVal(next.state)) << std::endl;
-                    for(size_t i = 0; i < 7; i++){
-                        std::cout << int(next.state.corners[i]) << " ";
-                    }
-                    std::cout << std::endl;
-                    for(size_t i = 0; i < 9; i++){
-                        std::cout << int(next.state.edges[i]) << " ";
-                    }
-                    std::cout << std::endl;
-                }
-                found[(queue + 1 + newval - cur.value)%3].push_back(next);
+                alg.push_back(m);
+                std::cout << am.translate(alg) << std::endl;
+                //std::cout << "found[0]: " << found[0].size() << std::endl;
+                //std::cout << "found[1]: " << found[1].size() << std::endl;
+                //std::cout << "found[2]: " << found[2].size() << std::endl;
+                return alg;
             }
-            info &= info - 1; // set least significant 1 to 0
+            next.alg = cur.alg;
+            next.alg[cur.len] = m;          
+            next.len = cur.len + 1;
+            next.allowed_turns = 0b00111111 & ~(1u << (i ^ 1)); // cancel reverse turn
+            if(!(cur.allowed_turns & (1u << (i ^ 1)))){ // if reverse turn was previously canceled, also cancel this turn
+                next.allowed_turns &= ~(1u << i);
+            }
+            next.value = newval;
+            if(cur.value > newval + 1 || cur.value < newval - 1){
+                std::cout << "heuristic invalid: " << std::endl;
+                std::cout << int(getHeuVal(cur.state)) << std::endl;
+                for(size_t i = 0; i < 7; i++){
+                    std::cout << int(cur.state.corners[i]) << " ";
+                }
+                std::cout << std::endl;
+                for(size_t i = 0; i < 9; i++){
+                    std::cout << int(cur.state.edges[i]) << " ";
+                }
+                std::cout << std::endl;
+                std::cout << int(getHeuVal(next.state)) << std::endl;
+                for(size_t i = 0; i < 7; i++){
+                    std::cout << int(next.state.corners[i]) << " ";
+                }
+                std::cout << std::endl;
+                for(size_t i = 0; i < 9; i++){
+                    std::cout << int(next.state.edges[i]) << " ";
+                }
+                std::cout << std::endl;
+            }
+            found[(queue + 1 + newval - cur.value)%3].push_back(next);
+            valid_turns &= valid_turns - 1; // set least significant 1 to 0
         }
     }
 }

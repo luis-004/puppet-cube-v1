@@ -27,7 +27,7 @@ static constexpr size_t num_distinct_shapes = 2214;
 static constexpr size_t num_corner_permutations = 36;
 static constexpr size_t num_edge_permutations = 362880;
 static constexpr size_t num_edge_orientations = 256;
-static constexpr uint8_t repr_bit = 9; 
+static constexpr uint8_t repr_bit = 6; 
 
 class Table{
     Puppet puppet;
@@ -36,7 +36,7 @@ class Table{
 
     public:
         Table();
-        std::vector<uint16_t> shape_info;
+        std::vector<uint8_t> shape_info;
         std::vector<uint16_t> shape_index;
         std::vector<uint8_t> table_CF;
         std::vector<uint8_t> table_SE;
@@ -115,10 +115,7 @@ class Table{
         size_t CEO_index(const Puppet::State&);
         size_t SEP_index(const Puppet::State&);
         size_t EP_index(const Puppet::State&);
-
         using IndexFunc = size_t (Table::*)(const Puppet::State&);
         void shape_table();
-        //void corner_table();
         void table_full(const std::string& filename, const uint64_t entries, IndexFunc idxfunc);
-        void table_full_turn(const uint64_t entries, IndexFunc idxfunc);
 };

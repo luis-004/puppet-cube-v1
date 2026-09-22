@@ -11,7 +11,7 @@ bool PuppetShape::test_cube_shape(const Shape& shape){
 
 // assumes double turns are possible
 // R:0 U:1 F:2 R':3 U':4 F':5 R2:6 U2:7 F2:8
-bool PuppetShape::turn(Shape& shape, uint8_t face, uint8_t dir){
+bool PuppetShape::turn(Shape& shape, uint8_t face, bool dir){
     auto& idxs = rotate_idxs[face];
     auto& pieces = shape.pieces;
     auto cur = pieces;

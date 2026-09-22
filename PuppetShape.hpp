@@ -1,4 +1,4 @@
-#pragma once //???
+#pragma once
 #include <iostream>
 #include <vector>
 #include <string>
@@ -51,10 +51,9 @@ class PuppetShape {
         }
     };
 
-    static constexpr uint8_t roll[3][4] = {
+    static constexpr uint8_t roll[2][4] = {
         {3,0,1,2},
-        {1,2,3,0},
-        {2,3,0,1}
+        {1,2,3,0}
     };
 
     static constexpr uint8_t blocking_idx = 7;
@@ -70,5 +69,5 @@ class PuppetShape {
         PuppetShape();
         void get_cube_shape(Shape& shape);
         bool test_cube_shape(const Shape& shape);
-        bool turn(Shape& shape, uint8_t face, uint8_t dir);
+        bool turn(Shape& shape, uint8_t face, bool dir);
 };

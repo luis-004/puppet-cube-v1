@@ -2,15 +2,6 @@
 Puppet::Puppet(){}
 
 void Puppet::getSolved(State& state){
-    /*for(int m = 0; m < 3; m++){ // WRONG ASSERTIONS! need to be changed
-        for (int i = 0; i < NUM_CORNER_VALS; ++i) {
-            assert(turn_corners[m+3][turn_corners[m][i]] == i);
-            assert(turn_corners[m][turn_corners[m+3][i]] == i);
-
-            assert(turn_corners[m][turn_corners[m][i]] == turn_corners[m+6][i]);
-            assert(turn_corners[m+6][turn_corners[m+6][i]] == i);
-        }
-    }*/
     state.corners = solved_corners;
     state.edges = solved_edges;
 }
@@ -27,20 +18,6 @@ void Puppet::turn(State& state, Move m){
         edge = turn_edges[static_cast<uint8_t>(m)][edge];
     }
 }
-
-/*uint32_t Puppet::getCornerHash(const State& state){
-    uint32_t hash = 0;
-    uint8_t visited = 0;
-    for(uint8_t i = 1; i < NUM_CORNERS; i++){
-        hash *= NUM_CORNER_VALS - i * 3;
-        auto corner = state.corners[i];
-        auto pos = position[corner];
-        uint8_t idx = corner - 3 * __builtin_popcount(visited & ((1u << pos) - 1));
-        visited |= (1u << pos); // mark as visited
-        hash += idx;
-    }
-    return hash;
-}*/
 
 uint32_t Puppet::getShapeHash(const State& state){
     uint8_t permutation = 0;
