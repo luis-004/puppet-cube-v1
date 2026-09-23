@@ -30,12 +30,12 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
     };
     node next;
     Puppet::State state = start;
-    uint8_t queue = 0;
-    std::array<std::vector<node>, 3> found;
+    bool queue = 0;
+    std::array<std::vector<node>, 2> found;
     found[0].push_back({state, {}, 0b00111111, 0, getHeuVal(start)});
     while(true){
         if(found[queue].empty()){
-            queue = (queue + 1) % 3; 
+            queue = !queue;
             //std::cout << "switched to next queue"<< std::endl;
             //now = std::chrono::high_resolution_clock::now();
             //duration = now - start_time;
@@ -76,7 +76,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
                 next.allowed_turns &= ~(1u << i);
             }
             next.value = newval;
-            if(cur.value > newval + 1 || cur.value < newval - 1){
+            if(cur.value != newval + 1 && cur.value != newval - 1){
                 std::cout << "heuristic invalid: " << std::endl;
                 std::cout << int(getHeuVal(cur.state)) << std::endl;
                 for(size_t i = 0; i < 7; i++){
@@ -97,7 +97,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
                 }
                 std::cout << std::endl;
             }
-            found[(queue + 1 + newval - cur.value)%3].push_back(next);
+            found[(newval < cur.value) == queue].push_back(next);
             valid_turns &= valid_turns - 1; // set least significant 1 to 0
         }
     }
