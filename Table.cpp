@@ -70,10 +70,10 @@ void Table::shape_table(){
             s = false;
         }else{
             std::cout << "end" << std::endl;
-            write_table("Shape_info_htm", info_table);
-            write_table("Shape_index_htm", index_table);
-            write_table("Shape_repr_htm", repr_index_table);
-            write_table("Shape_DCA_htm", DCA_table);
+            write_table("Shape_info", info_table);
+            write_table("Shape_index", index_table);
+            write_table("Shape_repr", repr_index_table);
+            write_table("Shape_DCA", DCA_table);
             std::cout << "saved" <<  std::endl;
             now = std::chrono::high_resolution_clock::now();
             duration = now - start_time;
@@ -138,8 +138,8 @@ void Table::table_full(const std::string& filename, const uint64_t entries, Inde
     std::chrono::duration<double> duration{0.0};
     auto now = start_time;
     std::cout << "start" << std::endl;
-    load_table<uint16_t> (shape_info, "Shape_info_htm");
-    load_table<uint16_t> (shape_index, "Shape_index_htm");
+    load_table<uint16_t> (shape_info, "Shape_info");
+    load_table<uint16_t> (shape_index, "Shape_index");
     struct node{
         Puppet::State state;
         uint8_t last_face;

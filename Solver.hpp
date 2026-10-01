@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <fstream>
 #include <random>
+#include <queue>
 
 #include <bitset>
 #include <filesystem>

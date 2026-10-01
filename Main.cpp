@@ -40,11 +40,11 @@ int main(){
     //table.table_full("shape_ep_full.heu", num_shapes*num_edge_permutations, &Table::SEP_index);
     //table.table_full_turn(num_shapes*num_corner_permutations*num_edge_orientations, &Table::CEO_index);
     //std::cout << "loading tables" << std::endl;
-    Solver solver("Shape_index_htm", "Shape_info_htm", "lookup/corner_flip_full_htm.heu", "lookup/shape_ep_full_htm.heu");
+    Solver solver("lookup/Shape_index", "lookup/Shape_info", "lookup/corner_flip_full.heu", "lookup/shape_ep_full.heu");
     //solver.gods_mirror(&Solver::astar);
     //std::cout << "loaded" << std::endl;
     //solver.scramble_set("500_sorted", 500, &Solver::astar, true);
-    solver.solve_scramble_set("500_sorted", &Solver::astar);
+    solver.solve_scramble_set("results/500_sorted", &Solver::astar);
     /*auto scramble = solver.random_state(&Solver::astar);
     std::cout << "Ready" << std::endl;
     size_t count = 0;

@@ -76,7 +76,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
                 next.alg[cur.len] = m;          
                 next.len = cur.len + 1;
                 next.value = newval;
-                if(cur.value > newval + 1 || cur.value < newval - 1){
+                /*if(cur.value > newval + 1 || cur.value < newval - 1){
                     std::cout << "heuristic invalid: " << std::endl;
                     std::cout << int(getHeuVal(cur.state)) << std::endl;
                     for(size_t i = 0; i < 7; i++){
@@ -96,7 +96,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
                         std::cout << int(next.state.edges[i]) << " ";
                     }
                     std::cout << std::endl;
-                }
+                }*/
                 found[(queue + 1 + newval - cur.value)%3].push_back(next);
             }
             info &= info - 1; // set least significant 1 to 0
