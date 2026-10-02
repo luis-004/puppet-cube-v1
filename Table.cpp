@@ -138,8 +138,8 @@ void Table::table_full(const std::string& filename, const uint64_t entries, Inde
     std::chrono::duration<double> duration{0.0};
     auto now = start_time;
     std::cout << "start" << std::endl;
-    load_table<uint16_t> (shape_info, "Shape_info");
-    load_table<uint16_t> (shape_index, "Shape_index");
+    load_table<uint16_t> (shape_info, "lookup/Shape_info");
+    load_table<uint16_t> (shape_index, "lookup/Shape_index");
     struct node{
         Puppet::State state;
         uint8_t last_face;
