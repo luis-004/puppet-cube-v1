@@ -70,6 +70,38 @@
 				"\"${fileDirname}\\Main.exe > ${fileDirname}\\output.txt\""
 			],
 			"group": "test"
+		},
+		{
+			"type": "cppbuild",
+			"label": "Build Visual",
+			"command": "C:/msys64/mingw64/bin/g++.exe",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-mconsole",
+				"-g",
+				"-O0",
+				"-pedantic",
+				"-Wall",
+				"-Werror",
+
+				"-I${workspaceFolder}/visual",
+
+				"-x", "c",
+				"${workspaceFolder}/visual/glad.c",
+				"-x", "none",
+
+				"${workspaceFolder}/visual/VisualMain.cpp",
+				"${workspaceFolder}/visual/renderer.cpp",
+				"${workspaceFolder}/visual/shader.cpp",
+				"${workspaceFolder}/visual/window_manager.cpp",
+
+				"-o", "${workspaceFolder}/visual/Visual.exe",
+				"-lglfw3", "-lopengl32", "-lgdi32"
+			],
+			"options": { "cwd": "C:/msys64/mingw64/bin" },
+			"problemMatcher": ["$gcc"],
+			"group": "build",
+			"detail": "Visualisierung (GLFW/GLAD/GLM)"
 		}
 	]
 }
