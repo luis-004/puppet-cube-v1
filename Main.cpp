@@ -45,7 +45,7 @@ int main(){
     //std::cout << "loaded" << std::endl;
     //solver.scramble_set("500_sorted", 500, &Solver::astar, true);
     solver.solve_scramble_set("results/500_sort_ofc", &Solver::astar);
-    /*auto scramble = solver.random_state(&Solver::astar);
+    /*auto scramble = solver.random_state(&Solver::astar_parent_nodes);
     std::cout << "Ready" << std::endl;
     size_t count = 0;
     while(true){
@@ -54,7 +54,7 @@ int main(){
         if (input == "q") break;
         if (input == "c") system("cls");
         //system("cls");
-        scramble = solver.random_state(&Solver::astar);
+        scramble = solver.random_state(&Solver::astar_parent_nodes);
     }
     cin.get();*/
     return 0;

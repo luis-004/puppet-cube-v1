@@ -38,15 +38,11 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
     while(true){
         if(found[queue].empty()){
             queue = (queue + 1) % 3; 
-            //std::cout << "switched to next queue"<< std::endl;
-            //now = std::chrono::high_resolution_clock::now();
-            //duration = now - start_time;
-            //std::cout << "time: " << duration.count() <<  std::endl;
             continue;
         }
         cur = found[queue].back();
-        state = cur.state;
         found[queue].pop_back();
+        state = cur.state;
         if(cur.len > 0) last_face = getFace(cur.alg[cur.len-1]);
         uint16_t info = table.shape_info[puppet.getShapeHash(state)];
         uint8_t i;
@@ -67,39 +63,64 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
                     }
                     alg.push_back(m);
                     std::cout << am.translate(alg) << std::endl;
-                    //std::cout << "found[0]: " << found[0].size() << std::endl;
-                    //std::cout << "found[1]: " << found[1].size() << std::endl;
-                    //std::cout << "found[2]: " << found[2].size() << std::endl;
                     return alg;
                 }
                 next.alg = cur.alg;
                 next.alg[cur.len] = m;          
                 next.len = cur.len + 1;
                 next.value = newval;
-                /*if(cur.value > newval + 1 || cur.value < newval - 1){
-                    std::cout << "heuristic invalid: " << std::endl;
-                    std::cout << int(getHeuVal(cur.state)) << std::endl;
-                    for(size_t i = 0; i < 7; i++){
-                        std::cout << int(cur.state.corners[i]) << " ";
-                    }
-                    std::cout << std::endl;
-                    for(size_t i = 0; i < 9; i++){
-                        std::cout << int(cur.state.edges[i]) << " ";
-                    }
-                    std::cout << std::endl;
-                    std::cout << int(getHeuVal(next.state)) << std::endl;
-                    for(size_t i = 0; i < 7; i++){
-                        std::cout << int(next.state.corners[i]) << " ";
-                    }
-                    std::cout << std::endl;
-                    for(size_t i = 0; i < 9; i++){
-                        std::cout << int(next.state.edges[i]) << " ";
-                    }
-                    std::cout << std::endl;
-                }*/
                 found[(queue + 1 + newval - cur.value)%3].push_back(next);
             }
             info &= info - 1; // set least significant 1 to 0
+        }
+    }
+}
+
+std::vector<Move> Solver::astar_parent_nodes(const Puppet::State& start){
+    struct Node {
+        Puppet::State state;
+        uint32_t parent;
+        Move move;
+        uint8_t value;
+    };
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::vector<Node> arena;
+    arena.reserve(1 << 24);
+    arena.push_back({start, UINT16_MAX, Move{}, getHeuVal(start)});
+
+    std::array<std::vector<uint32_t>, 3> found;
+    found[0].push_back(0);
+    uint8_t queue = 0;
+
+    while(true){
+        if(found[queue].empty()){ queue = (queue + 1) % 3; continue; }
+        uint32_t cur_idx = found[queue].back();
+        found[queue].pop_back();
+        const Node cur = arena[cur_idx];
+        uint8_t last_face = (cur.parent == UINT16_MAX) ? 255 : getFace(cur.move);
+
+        uint16_t info = table.shape_info[puppet.getShapeHash(cur.state)];
+        uint8_t i;
+        while((i = __builtin_ctz(info)) < repr_bit){
+            Move m = static_cast<Move>(i);
+            if(getFace(m) != last_face){
+                Puppet::State ns = cur.state;
+                puppet.turn(ns, m);
+                uint8_t newval = getHeuVal(ns);
+                if(newval == 0){
+                    std::vector<Move> alg{m};
+                    for(uint32_t k = cur_idx; arena[k].parent != UINT16_MAX; k = arena[k].parent)
+                        alg.push_back(arena[k].move);
+                    std::reverse(alg.begin(), alg.end());
+                    std::chrono::duration<double> d = std::chrono::high_resolution_clock::now() - start_time;
+                    std::cout << "solution found. time: " << d.count() << std::endl;
+                    std::cout << am.translate(alg) << std::endl;
+                    return alg;
+                }
+                arena.push_back({ns, cur_idx, m, newval});
+                found[(queue + 1 + newval - cur.value) % 3].push_back(arena.size() - 1);
+            }
+            info &= info - 1;
         }
     }
 }

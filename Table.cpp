@@ -34,8 +34,8 @@ void Table::shape_table(){
     std::vector<uint16_t> index_table;
     info_table.resize(shape_table_size);
     DCA_table.resize(shape_table_size);
-    index_table.assign(shape_table_size, num_shapes*2);
-    repr_index_table.resize(shape_table_size, 65535);
+    index_table.assign(shape_table_size, UINT16_MAX);
+    repr_index_table.resize(shape_table_size, UINT16_MAX);
     uint8_t num_turns = 1;
     bool s = true;
     puppet.getSolved(state);

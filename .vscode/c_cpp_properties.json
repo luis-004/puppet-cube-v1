@@ -28,6 +28,14 @@
             "cStandard": "c17",
             "cppStandard": "gnu++20",
             "intelliSenseMode": "windows-gcc-x64"
+        },
+        {
+            "name": "Linux",
+            "includePath": ["${workspaceFolder}/**"],
+            "compilerPath": "/usr/bin/g++-10",
+            "cStandard": "c17",
+            "cppStandard": "gnu++20",
+            "intelliSenseMode": "linux-gcc-x64"
         }
     ],
     "version": 4
