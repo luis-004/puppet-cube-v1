@@ -35,6 +35,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
     uint8_t newval = 0;
     std::array<std::vector<node>, 3> found;
     found[0].push_back({state, {}, 0, getHeuVal(start)});
+    size_t nodes_gen = 1;
     while(true){
         if(found[queue].empty()){
             queue = (queue + 1) % 3; 
@@ -56,20 +57,21 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
                 if(newval == 0){
                     now = std::chrono::high_resolution_clock::now();
                     duration = now - start_time;
-                    std::cout << "solution found. time: " << duration.count() << std::endl;
+                    std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << size_t(nodes_gen) << std::endl;
                     std::vector<Move> alg;
                     for(uint8_t i = 0; i < cur.len; i++){
                         alg.push_back(cur.alg[i]);
                     }
                     alg.push_back(m);
-                    std::cout << am.translate(alg) << std::endl;
+                    std::cout << am.translate(alg) << "  " << int(cur.len) << std::endl;
                     return alg;
                 }
                 next.alg = cur.alg;
-                next.alg[cur.len] = m;          
+                next.alg[cur.len] = m;
                 next.len = cur.len + 1;
                 next.value = newval;
                 found[(queue + 1 + newval - cur.value)%3].push_back(next);
+                nodes_gen++;
             }
             info &= info - 1; // set least significant 1 to 0
         }
@@ -192,19 +194,19 @@ void Solver::solve_scramble_set(const std::string& filename, solvefunc solve){
     for(auto s : scrambles){
         std::cout << int(scount++) <<"  ";
         puppet.getSolved(state);
-        auto count = 0; 
+        //auto count = 0; 
         for(auto m : s){
             if(m == END) break;
             puppet.turn(state, m);
-            count ++;
+            //count ++;
         }
-        for(auto i: state.corners){
+        /*for(auto i: state.corners){
             std::cout << int(i) << " ";
         }
         for(auto i: state.edges){
             std::cout << int(i) << " ";
         }
-        std::cout << "  " << int(count) << std::endl;
+        std::cout << "  " << int(count) << std::endl;*/
         (this->*solve)(state);
     }
     now = std::chrono::high_resolution_clock::now();
