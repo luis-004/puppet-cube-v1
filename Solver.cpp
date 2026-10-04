@@ -87,35 +87,37 @@ std::vector<Move> Solver::astar_weighted(const Puppet::State& start){
     auto start_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration{0.0};
     auto now = start_time;
+    double weight = 1.0;
     struct node{
         Puppet::State state;
         std::array<Move, 50> alg;
         uint8_t len;
         uint8_t value;
     };
+    auto cmp = [weight](const node& a, const node& b){
+        double fa = a.len + weight * a.value;
+        double fb = b.len + weight * b.value;
+        if(fa != fb) return fa > fb;
+        return a.value > b.value;
+    };
+    std::priority_queue<node, std::vector<node>, decltype(cmp)> found(cmp);
     node cur;
     node next;
     Puppet::State state = start;
     uint8_t last_face = 255;
-    uint8_t queue = 0;
     uint8_t newval = 0;
     std::array<std::vector<node>, 3> found;
-    found[0].push_back({state, {}, 0, getHeuVal(start)});
+    found.push({state, {}, 0, getHeuVal(start)});
     size_t nodes_gen = 1;
     size_t max_nodes = 1;
-    while(true){
-        size_t size = found[0].size() + found[1].size() + found[2].size();
-        if(size > max_nodes){
-            max_nodes = size;
+    while(!found.empty()){
+        if(found.size() > max_nodes){
+            max_nodes = found.size();
         }
-        if(found[queue].empty()){
-            queue = (queue + 1) % 3; 
-            continue;
-        }
-        cur = found[queue].back();
-        found[queue].pop_back();
+        cur = found.top();
+        found.pop();
         state = cur.state;
-        if(cur.len > 0) last_face = getFace(cur.alg[cur.len-1]);
+        last_face = cur.len > 0 ? getFace(cur.alg[cur.len-1]) : 255;
         uint16_t info = table.shape_info[puppet.getShapeHash(state)];
         uint8_t i;
         while((i = __builtin_ctz(info)) < repr_bit){ // get idx of least significant 1
@@ -141,12 +143,13 @@ std::vector<Move> Solver::astar_weighted(const Puppet::State& start){
                 next.alg[cur.len] = m;
                 next.len = cur.len + 1;
                 next.value = newval;
-                found[(queue + 1 + newval - cur.value)%3].push_back(next);
+                found.push(next);
                 nodes_gen++;
             }
             info &= info - 1; // set least significant 1 to 0
         }
     }
+    return {}; 
 }
 
 std::vector<Move> Solver::astar_parent_nodes(const Puppet::State& start){
