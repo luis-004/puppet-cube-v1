@@ -29,7 +29,9 @@ class Solver{
         Solver(const std::string& shape_index_file, const std::string& shape_info_file, const std::string& CF_table_file, const std::string& SE_table_file);
         uint8_t getHeuVal(const Puppet::State& state);
         std::vector<Move> astar(const Puppet::State& start);
+        std::vector<Move> astar_weighted(const Puppet::State& start);
         std::vector<Move> astar_parent_nodes(const Puppet::State& start);
+        
 
         using solvefunc = std::vector<Move> (Solver::*)(const Puppet::State&);
 

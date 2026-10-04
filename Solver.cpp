@@ -36,7 +36,12 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
     std::array<std::vector<node>, 3> found;
     found[0].push_back({state, {}, 0, getHeuVal(start)});
     size_t nodes_gen = 1;
+    size_t max_nodes = 1;
     while(true){
+        size_t size = found[0].size() + found[1].size() + found[2].size();
+        if(size > max_nodes){
+            max_nodes = size;
+        }
         if(found[queue].empty()){
             queue = (queue + 1) % 3; 
             continue;
@@ -57,13 +62,79 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
                 if(newval == 0){
                     now = std::chrono::high_resolution_clock::now();
                     duration = now - start_time;
-                    std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << size_t(nodes_gen) << std::endl;
+                    std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << nodes_gen << " maximum nodes stored: "<< max_nodes << " nodes per second: " << double(duration.count() > 0 ? nodes_gen / double(duration.count()) : 0.0) << std::endl;
                     std::vector<Move> alg;
                     for(uint8_t i = 0; i < cur.len; i++){
                         alg.push_back(cur.alg[i]);
                     }
                     alg.push_back(m);
-                    std::cout << am.translate(alg) << "  " << int(cur.len) << std::endl;
+                    std::cout << am.translate(alg) << "  " << int(cur.len + 1) << std::endl;
+                    return alg;
+                }
+                next.alg = cur.alg;
+                next.alg[cur.len] = m;
+                next.len = cur.len + 1;
+                next.value = newval;
+                found[(queue + 1 + newval - cur.value)%3].push_back(next);
+                nodes_gen++;
+            }
+            info &= info - 1; // set least significant 1 to 0
+        }
+    }
+}
+
+std::vector<Move> Solver::astar_weighted(const Puppet::State& start){
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration{0.0};
+    auto now = start_time;
+    struct node{
+        Puppet::State state;
+        std::array<Move, 50> alg;
+        uint8_t len;
+        uint8_t value;
+    };
+    node cur;
+    node next;
+    Puppet::State state = start;
+    uint8_t last_face = 255;
+    uint8_t queue = 0;
+    uint8_t newval = 0;
+    std::array<std::vector<node>, 3> found;
+    found[0].push_back({state, {}, 0, getHeuVal(start)});
+    size_t nodes_gen = 1;
+    size_t max_nodes = 1;
+    while(true){
+        size_t size = found[0].size() + found[1].size() + found[2].size();
+        if(size > max_nodes){
+            max_nodes = size;
+        }
+        if(found[queue].empty()){
+            queue = (queue + 1) % 3; 
+            continue;
+        }
+        cur = found[queue].back();
+        found[queue].pop_back();
+        state = cur.state;
+        if(cur.len > 0) last_face = getFace(cur.alg[cur.len-1]);
+        uint16_t info = table.shape_info[puppet.getShapeHash(state)];
+        uint8_t i;
+        while((i = __builtin_ctz(info)) < repr_bit){ // get idx of least significant 1
+            Move m = static_cast<Move>(i);
+            uint8_t face = getFace(m);
+            if(face != last_face){
+                next.state = state;
+                puppet.turn(next.state, m);
+                newval = getHeuVal(next.state);
+                if(newval == 0){
+                    now = std::chrono::high_resolution_clock::now();
+                    duration = now - start_time;
+                    std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << nodes_gen << " maximum nodes stored: "<< max_nodes << " nodes per second: " << double(duration.count() > 0 ? nodes_gen / double(duration.count()) : 0.0) << std::endl;
+                    std::vector<Move> alg;
+                    for(uint8_t i = 0; i < cur.len; i++){
+                        alg.push_back(cur.alg[i]);
+                    }
+                    alg.push_back(m);
+                    std::cout << am.translate(alg) << "  " << int(cur.len + 1) << std::endl;
                     return alg;
                 }
                 next.alg = cur.alg;
