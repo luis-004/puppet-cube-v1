@@ -38,7 +38,10 @@ class Solver{
         using solvefunc = std::vector<Move> (Solver::*)(const Puppet::State&);
 
         std::vector<Move> random_state(solvefunc solve);
-        void scramble_set(const std::string& filename, size_t count, solvefunc solve, bool sort);
+        void scramble_set_random_states(const std::string& filename, size_t count, solvefunc solve, bool sort);
+        std::vector<Move> backward_moves(uint16_t depth);
+        void scramble_set_backward_moves(const std::string& filename, size_t count, uint16_t depht);
+        void scramble_set_backward_moves_increasing(const std::string& filename, const std::vector<size_t> count_per_depht);
         void solve_scramble_set(const std::string& filename, solvefunc solve);
         void god(solvefunc solve);
         void gods_mirror(solvefunc solve);

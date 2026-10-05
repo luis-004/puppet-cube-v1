@@ -269,7 +269,7 @@ std::vector<Move> Solver::random_state(solvefunc solve){
     return am.reverse((this->*solve)(start));
 }
 
-void Solver::scramble_set(const std::string& filename, size_t count, solvefunc solve, bool sort){
+void Solver::scramble_set_random_states(const std::string& filename, size_t count, solvefunc solve, bool sort){
     std::vector<std::array<Move, 50>> scrambles;
     for(size_t i = 0; i < count; i++){
         std::vector<Move> scramble = random_state(solve);
@@ -293,6 +293,19 @@ void Solver::scramble_set(const std::string& filename, size_t count, solvefunc s
     }
 
     table.write_table<std::array<Move, 50>>(filename, scrambles);
+}
+
+std::vector<Move> Solver::backward_moves(uint16_t_t depth){
+    PuppetShape::Shape shape;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::array<uint8_t, 9> turns = {0,1,2,3,4,5,6,7,8,9};
+    std::vector<uint8_t> valid_turns = {};
+    std::vector<std::vector<uint8_t>> impossible_turns;
+    std::vector<Move> scramble = {};
+    bool impossible;
+    uint8_t length = 0;
+
 }
 
 void Solver::solve_scramble_set(const std::string& filename, solvefunc solve){
