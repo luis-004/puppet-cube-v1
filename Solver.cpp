@@ -83,11 +83,32 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
     }
 }
 
+namespace {
+// Annahme: Puppet::State ist trivially copyable und hat keine Padding-Bytes.
+// Falls nicht, ersetze beide Funktoren durch eine eigene Hash-/Vergleichsfunktion.
+struct StateHash {
+    size_t operator()(const Puppet::State& s) const {
+        const unsigned char* p = reinterpret_cast<const unsigned char*>(&s);
+        uint64_t h = 1469598103934665603ull; // FNV-1a
+        for(size_t i = 0; i < sizeof(s); i++){
+            h ^= p[i];
+            h *= 1099511628211ull;
+        }
+        return static_cast<size_t>(h);
+    }
+};
+struct StateEq {
+    bool operator()(const Puppet::State& a, const Puppet::State& b) const {
+        return std::memcmp(&a, &b, sizeof(a)) == 0;
+    }
+};
+}
+
 std::vector<Move> Solver::astar_weighted(const Puppet::State& start){
     auto start_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration{0.0};
     auto now = start_time;
-    double weight = 1.0;
+    double weight = 0.3;
     struct node{
         Puppet::State state;
         std::array<Move, 50> alg;
@@ -95,18 +116,20 @@ std::vector<Move> Solver::astar_weighted(const Puppet::State& start){
         uint8_t value;
     };
     auto cmp = [weight](const node& a, const node& b){
-        double fa = a.len + weight * a.value;
-        double fb = b.len + weight * b.value;
+        double fa = a.len * weight + a.value;
+        double fb = b.len * weight + b.value;
         if(fa != fb) return fa > fb;
         return a.value > b.value;
     };
     std::priority_queue<node, std::vector<node>, decltype(cmp)> found(cmp);
+    std::unordered_map<Puppet::State, uint8_t, StateHash, StateEq> seen;
+    size_t dup_total = 0;      // State schon einmal generiert
+
     node cur;
     node next;
     Puppet::State state = start;
     uint8_t last_face = 255;
     uint8_t newval = 0;
-    std::array<std::vector<node>, 3> found;
     found.push({state, {}, 0, getHeuVal(start)});
     size_t nodes_gen = 1;
     size_t max_nodes = 1;
@@ -118,6 +141,7 @@ std::vector<Move> Solver::astar_weighted(const Puppet::State& start){
         found.pop();
         state = cur.state;
         last_face = cur.len > 0 ? getFace(cur.alg[cur.len-1]) : 255;
+        if(cur.len >= 50) continue;
         uint16_t info = table.shape_info[puppet.getShapeHash(state)];
         uint8_t i;
         while((i = __builtin_ctz(info)) < repr_bit){ // get idx of least significant 1
@@ -130,7 +154,8 @@ std::vector<Move> Solver::astar_weighted(const Puppet::State& start){
                 if(newval == 0){
                     now = std::chrono::high_resolution_clock::now();
                     duration = now - start_time;
-                    std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << nodes_gen << " maximum nodes stored: "<< max_nodes << " nodes per second: " << double(duration.count() > 0 ? nodes_gen / double(duration.count()) : 0.0) << std::endl;
+                    std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << nodes_gen << " maximum nodes stored: "<< max_nodes 
+                    << " nodes per second: " << double(duration.count() > 0 ? nodes_gen / double(duration.count()) : 0.0) << " states already seen: "<< dup_total << std::endl;
                     std::vector<Move> alg;
                     for(uint8_t i = 0; i < cur.len; i++){
                         alg.push_back(cur.alg[i]);
@@ -138,6 +163,19 @@ std::vector<Move> Solver::astar_weighted(const Puppet::State& start){
                     alg.push_back(m);
                     std::cout << am.translate(alg) << "  " << int(cur.len + 1) << std::endl;
                     return alg;
+                }
+                uint8_t newlen = cur.len + 1;
+                auto it = seen.find(next.state);
+                if(it != seen.end()){
+                    dup_total++;
+                    if(it->second <= newlen){
+                        info &= info - 1;
+                        //continue;
+                    } else {
+                        it->second = newlen;
+                    }
+                } else {
+                    seen.emplace(next.state, newlen);
                 }
                 next.alg = cur.alg;
                 next.alg[cur.len] = m;

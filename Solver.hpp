@@ -12,6 +12,8 @@
 #include <fstream>
 #include <random>
 #include <queue>
+#include <unordered_map>
+#include <cstring>
 
 #include <bitset>
 #include <filesystem>
