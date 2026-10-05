@@ -22,6 +22,7 @@
 #include "Puppet.hpp"
 #include "Table.hpp"
 #include "Solver.hpp"
+#include "BackwardGenerator.hpp"
 
 using namespace std;
 
@@ -44,7 +45,7 @@ int main(){
     //solver.gods_mirror(&Solver::astar);
     //std::cout << "loaded" << std::endl;
     //solver.scramble_set("500_sorted", 500, &Solver::astar, true);
-    solver.solve_scramble_set("results/scrambles_500_sorted", &Solver::astar_weighted);
+    solver.solve_scramble_set("results/bmi_30_10", &Solver::astar);
     /*auto scramble = solver.random_state(&Solver::astar_parent_nodes);
     std::cout << "Ready" << std::endl;
     size_t count = 0;
@@ -55,6 +56,20 @@ int main(){
         if (input == "c") system("cls");
         //system("cls");
         scramble = solver.random_state(&Solver::astar_parent_nodes);
+    }
+    cin.get();*/
+    //BackwardGenerator bg("lookup/Shape_info");
+    //bg.scramble_set_backward_moves_increasing("results/bmi_30_10", 1, {1, 4, 5, 5, 5, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10});
+    /*auto scramble = bg.backward_moves(20);
+    std::cout << "Ready" << std::endl;
+    size_t count = 0;
+    while(true){
+        getline(std::cin, input);
+        std::cout << ++count << " " << am.translate(am.translateYX2(scramble)) << scramble.size() << endl;
+        if (input == "q") break;
+        if (input == "c") system("cls");
+        //system("cls");
+        scramble = bg.backward_moves(20);
     }
     cin.get();*/
     return 0;
