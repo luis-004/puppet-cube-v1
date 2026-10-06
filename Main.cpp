@@ -45,7 +45,7 @@ int main(){
     //solver.gods_mirror(&Solver::astar);
     //std::cout << "loaded" << std::endl;
     //solver.scramble_set("500_sorted", 500, &Solver::astar, true);
-    solver.solve_scramble_set("results/500_sort_ofc", &Solver::beam_search);
+    solver.solve_scramble_set("results/bmi_30_10", &Solver::iterative_deepening);
     /*auto scramble = solver.random_state(&Solver::iterative_deepening);
     std::cout << "Ready" << std::endl;
     size_t count = 0;
