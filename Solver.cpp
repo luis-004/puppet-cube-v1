@@ -30,9 +30,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
     node cur;
     node next;
     Puppet::State state = start;
-    uint8_t last_face = 255;
     uint8_t queue = 0;
-    uint8_t newval = 0;
     std::array<std::vector<node>, 3> found;
     found[0].push_back({state, {}, 0, getHeuVal(start)});
     size_t nodes_gen = 1;
@@ -49,7 +47,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
         cur = found[queue].back();
         found[queue].pop_back();
         state = cur.state;
-        if(cur.len > 0) last_face = getFace(cur.alg[cur.len-1]);
+        uint8_t last_face = cur.len > 0 ? getFace(cur.alg[cur.len-1]) : 255;
         uint16_t info = table.shape_info[puppet.getShapeHash(state)];
         uint8_t i;
         while((i = __builtin_ctz(info)) < repr_bit){ // get idx of least significant 1
@@ -58,7 +56,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
             if(face != last_face){
                 next.state = state;
                 puppet.turn(next.state, m);
-                newval = getHeuVal(next.state);
+                uint8_t newval = getHeuVal(next.state);
                 if(newval == 0){
                     now = std::chrono::high_resolution_clock::now();
                     duration = now - start_time;
@@ -255,16 +253,18 @@ std::vector<Move> Solver::iterative_deepening(const Puppet::State& start){
     uint8_t last_face = 255;
     uint8_t newval = 0;
     uint8_t bound = getHeuVal(start);
+    uint8_t bound_increment = 255;
     std::vector<node> found;
     found.push_back({state, {}, 0, bound});
     size_t nodes_gen = 1;
-    size_t max_nodes = 1;
+    size_t nodes_saved = 1;
     while(true){
-        if(found.size() > max_nodes){
-            max_nodes = size;
-        }
-        if(found[queue].empty()){
-            found.push_back({start, {}, 0, ++bound});
+        if(found.empty()){
+            bound += bound_increment;
+            found.push_back({start, {}, 0, bound});
+            nodes_saved++;
+            nodes_gen++;
+            last_face = 255;
         }
         cur = found.back();
         found.pop_back();
@@ -279,17 +279,18 @@ std::vector<Move> Solver::iterative_deepening(const Puppet::State& start){
                 next.state = state;
                 puppet.turn(next.state, m);
                 newval = getHeuVal(next.state);
+                nodes_gen++;
                 if(newval == 0){
                     now = std::chrono::high_resolution_clock::now();
                     duration = now - start_time;
-                    std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << nodes_gen 
-                    << " maximum nodes stored: "<< max_nodes << " nodes per second: " << double(duration.count() > 0 ? nodes_gen / double(duration.count()) : 0.0) << std::endl;
+                    std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << nodes_gen << " nodes stored: " << nodes_saved 
+                    << " nodes per second: " << double(duration.count() > 0 ? nodes_gen / double(duration.count()) : 0.0) << std::endl;
                     std::vector<Move> alg;
                     for(uint8_t i = 0; i < cur.len; i++){
                         alg.push_back(cur.alg[i]);
                     }
                     alg.push_back(m);
-                    std::cout << am.translate(alg) << "  " << int(cur.len + 1) << std::endl;
+                    std::cout << am.translate(am.reverse(alg)) << "  " << int(cur.len + 1) << std::endl;
                     return alg;
                 }
                 if(cur.len + newval < bound){
@@ -298,7 +299,9 @@ std::vector<Move> Solver::iterative_deepening(const Puppet::State& start){
                     next.len = cur.len + 1;
                     next.value = newval;
                     found.push_back(next);
-                    nodes_gen++;
+                    nodes_saved++;
+                }else if(cur.len + newval + 1 < bound + bound_increment){
+                    bound_increment = cur.len + newval + 1 - bound;
                 }
             }
             info &= info - 1; // set least significant 1 to 0
@@ -306,68 +309,71 @@ std::vector<Move> Solver::iterative_deepening(const Puppet::State& start){
     }
 }
 
-std::vector<Move> beam_search(const Puppet::State& start){
+std::vector<Move> Solver::beam_search(const Puppet::State& start){
     auto start_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration{0.0};
     auto now = start_time;
     size_t size = 1000;
     struct node{
         Puppet::State state;
-        std::array<Move, 50> alg;
-        uint8_t len;
+        Move last_turn;
         uint8_t value;
     };
+    std::unordered_set<Puppet::State, StateHash, StateEq> seen;
     Puppet::State state = start;
-    uint8_t last_face = 255;
-    uint8_t newval = 0;
     node next;
+    uint16_t len = 0;
     std::vector<node> beam;
     std::vector<node> kids;
-    beam.resize(size);
-    beam[0] = {state, {}, 0, getHeuVal(start)};
+    beam.reserve(size);
+    kids.reserve(size * 9);
+    beam.push_back({state, END, getHeuVal(start)});
     size_t nodes_gen = 1;
     while(true){
-        for(node n: beam){
-            if(n.len > 0) last_face = getFace(n.alg[n.len-1]);
+        kids.clear();
+        for(const node& n: beam){
+            uint8_t last_face = getFace(n.last_turn);
             state = n.state;
             uint16_t info = table.shape_info[puppet.getShapeHash(state)];
             uint8_t i;
             while((i = __builtin_ctz(info)) < repr_bit){ // get idx of least significant 1
+                info &= info - 1; // set least significant 1 to 0
                 Move m = static_cast<Move>(i);
-                uint8_t face = getFace(m);
-                if(face != last_face){
-                    next.state = state;
-                    puppet.turn(next.state, m);
-                    newval = getHeuVal(next.state);
-                    if(newval == 0){
-                        now = std::chrono::high_resolution_clock::now();
-                        duration = now - start_time;
-                        std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << nodes_gen 
-                        << " maximum nodes stored: "<< max_nodes << " nodes per second: " << double(duration.count() > 0 ? nodes_gen / double(duration.count()) : 0.0) << std::endl;
-                        std::vector<Move> alg;
-                        for(uint8_t i = 0; i < cur.len; i++){
-                            alg.push_back(cur.alg[i]);
-                        }
-                        alg.push_back(m);
-                        std::cout << am.translate(alg) << "  " << int(cur.len + 1) << std::endl;
-                        return alg;
-                    }
-                    next.alg = n.alg;
-                    next.alg[n.len] = m;
-                    next.len = n.len + 1;
+                if(getFace(m) == last_face) continue;
+                next.state = state;
+                puppet.turn(next.state, m);
+                uint8_t newval = getHeuVal(next.state);
+                if(newval == 0){
+                    now = std::chrono::high_resolution_clock::now();
+                    duration = now - start_time;
+                    std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << nodes_gen 
+                    << " nodes per second: " << double(duration.count() > 0 ? nodes_gen / double(duration.count()) : 0.0);
+                    std::cout << " solution: " << int(len + 1) << std::endl;
+                    return {};
+                }
+                auto it = seen.find(next.state);
+                if(it == seen.end()){
                     next.value = newval;
+                    next.last_turn = m;
                     kids.push_back(next);
                     nodes_gen++;
+                    seen.insert(next.state);
                 }
-                info &= info - 1; // set least significant 1 to 0
             }
         }
-        std::sort(kids.begin(), kids.end(),
-            [](const node& a, const node& b) {
-                return a.value < b.value;
-            });
-        for(size_t i = 0; i < beam.size(); i++){
-            beam[i] = kids[i];
+        if(kids.empty()){
+            std::cout << "Sackgasse" << std::endl;
+            return {};
+        }
+        size_t keep = std::min(size, kids.size());
+        std::nth_element(kids.begin(), kids.begin() + keep - 1, kids.end(),
+        [](const node& a, const node& b){ return a.value < b.value; });
+        kids.resize(keep);
+        std::swap(beam, kids);
+        len++;
+        if(len > 1000){
+            std::cout << "Endless loop" << std::endl;
+            return {};
         }
     }
 }

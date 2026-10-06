@@ -45,8 +45,8 @@ int main(){
     //solver.gods_mirror(&Solver::astar);
     //std::cout << "loaded" << std::endl;
     //solver.scramble_set("500_sorted", 500, &Solver::astar, true);
-    solver.solve_scramble_set("results/bmi_30_10", &Solver::astar);
-    /*auto scramble = solver.random_state(&Solver::astar_parent_nodes);
+    solver.solve_scramble_set("results/500_sort_ofc", &Solver::beam_search);
+    /*auto scramble = solver.random_state(&Solver::iterative_deepening);
     std::cout << "Ready" << std::endl;
     size_t count = 0;
     while(true){
@@ -55,7 +55,7 @@ int main(){
         if (input == "q") break;
         if (input == "c") system("cls");
         //system("cls");
-        scramble = solver.random_state(&Solver::astar_parent_nodes);
+        scramble = solver.random_state(&Solver::iterative_deepening);
     }
     cin.get();*/
     //BackwardGenerator bg("lookup/Shape_info");
