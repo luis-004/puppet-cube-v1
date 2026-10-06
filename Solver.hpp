@@ -33,7 +33,8 @@ class Solver{
         std::vector<Move> astar(const Puppet::State& start);
         std::vector<Move> astar_weighted(const Puppet::State& start);
         std::vector<Move> astar_parent_nodes(const Puppet::State& start);
-        
+        std::vector<Move> iterative_deepening(const Puppet::State& start);
+        std::vector<Move> beam_search(const Puppet::State& start);
 
         using solvefunc = std::vector<Move> (Solver::*)(const Puppet::State&);
 
