@@ -9,6 +9,8 @@
 #include <array>
 #include <algorithm>
 
+#include "Move.hpp"
+
 /*
         {
             0,   1,   2,   3,   4,    5,   6,   7,   8,   9,    10,  11,  12,  13,  14,   15,  16,  17,  18,  19,   20,  21,  22,  23,  24,
@@ -19,7 +21,7 @@
         }
 */
 class PuppetShape {
-    static constexpr std::array<uint8_t, 125> goal_pieces = {
+    static constexpr std::array<uint8_t, 125> goal_cubies = {
         7,7,6,6,0, 7,7,6,6,0, 3,3,2,2,0, 3,3,2,2,0, 0,0,0,0,0,
         7,7,6,6,0, 7,7,0,6,0, 3,0,0,0,0, 3,3,0,2,0, 0,0,0,0,0,
         5,5,4,4,0, 5,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 0,0,0,0,0,
@@ -27,7 +29,7 @@ class PuppetShape {
         0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0
     };
 
-    static constexpr uint8_t rotate_idxs[3][15][4] = {
+    static constexpr uint8_t cycle_idxs[3][15][4] = {
         {   // R
             {31, 41, 91, 81}, 
             {30, 40, 90, 80}, {35, 65, 85, 55},
@@ -51,24 +53,24 @@ class PuppetShape {
         }
     };
 
-    static constexpr uint8_t roll[3][4] = {
-        {3,0,1,2},
-        {1,2,3,0},
-        {2,3,0,1}
+    static constexpr uint8_t roll[3][4] = { // 3 faces and 4 cubies per cycle
+        {3,0,1,2}, // clockwise
+        {1,2,3,0}, // counterclockwise
+        {2,3,0,1}  // double
     };
 
-    static constexpr uint8_t blocking_idx = 7;
-    static constexpr uint8_t inner_cor_idx = 0;
-    static constexpr uint8_t state_len = 125;
+    static constexpr uint8_t BLOCKING_IDX = 7;
+    static constexpr uint8_t INNER_COR_IDX = 0;
+
     public:
         struct Shape{
-            std::array<uint8_t, 125> pieces;
+            std::array<uint8_t, 125> cubies;
             bool operator==(const Shape& other) const {
-                return pieces == other.pieces;
+                return cubies == other.cubies;
             }
         };
         PuppetShape();
-        void get_cube_shape(Shape& shape);
-        bool test_cube_shape(const Shape& shape);
-        bool turn(Shape& shape, uint8_t face, uint8_t dir);
+        void getCubeShape(Shape& shape);
+        bool testCubeShape(const Shape& shape);
+        bool turn(Shape& shape, Move m);
 };

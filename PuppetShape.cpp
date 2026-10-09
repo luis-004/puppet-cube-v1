@@ -1,46 +1,49 @@
 #include "PuppetShape.hpp"
 PuppetShape::PuppetShape(){}
 
-void PuppetShape::get_cube_shape(Shape& shape){
-    shape.pieces = goal_pieces;
+void PuppetShape::getCubeShape(Shape& shape){
+    shape.cubies = goal_cubies;
 }
 
-bool PuppetShape::test_cube_shape(const Shape& shape){
-    return shape.pieces == goal_pieces;
+bool PuppetShape::testCubeShape(const Shape& shape){
+    return shape.cubies == goal_cubies;
 }
 
 // assumes double turns are possible
-// R:0 U:1 F:2 R':3 U':4 F':5 R2:6 U2:7 F2:8
-bool PuppetShape::turn(Shape& shape, uint8_t face, uint8_t dir){
-    auto& idxs = rotate_idxs[face];
-    auto& pieces = shape.pieces;
-    auto cur = pieces;
-    bool moving[7] = {};
-    moving[pieces[idxs[inner_cor_idx][0]]] = true;
-    moving[pieces[idxs[inner_cor_idx][1]]] = true;
-    moving[pieces[idxs[inner_cor_idx][2]]] = true;
-    moving[pieces[idxs[inner_cor_idx][3]]] = true;
-    for(uint8_t i = blocking_idx; i < std::size(idxs); i++){
-        for(uint8_t j = 0; j < 4; j++){
-            auto const& row = idxs[i];
-            uint8_t src = pieces[row[roll[dir][j]]];
-            uint8_t dst = pieces[row[j]];
-            if(moving[src]){
-                if(moving[dst] || dst == 0){
-                    cur[row[j]] = src;
+bool PuppetShape::turn(Shape& shape, Move m){
+    const auto& rotation_idxs = roll[getRotation(m)];
+    const auto& cycles = cycle_idxs[getFace(m)];
+    auto& cubies = shape.cubies;
+    auto next_cubies = cubies;
+
+    uint8_t moving = 0;
+    for(uint8_t j = 0; j < 4; ++j)
+        moving |= 1u << cubies[cycles[INNER_COR_IDX][j]];
+
+    for(uint8_t i =  BLOCKING_IDX; i < std::size(cycles); ++i){
+        const auto& cycle = cycles[i];
+        for(uint8_t j = 0; j < 4; ++j){
+            uint8_t src = cubies[cycle[rotation_idxs[j]]];
+            uint8_t dst = cubies[cycle[j]];
+            if(moving & (1u << src)){
+                if(moving & (1u << dst) || dst == 0){
+                    next_cubies[cycle[j]] = src;
                 }else{
                     return false;
                 }
-            }else if(moving[dst]){
-                cur[row[j]] = 0;
+            }else if(moving & (1u << dst)){
+                next_cubies[cycle[j]] = 0;
             }
         }
     }
-    for(uint8_t i = 0; i < blocking_idx; i++){
-        for(uint8_t j = 0; j < 4; j++){
-            cur[idxs[i][j]] = pieces[idxs[i][roll[dir][j]]];
+
+    for(uint8_t i = 0; i <  BLOCKING_IDX; ++i){
+        const auto& cycle = cycles[i];
+        for(uint8_t j = 0; j < 4; ++j){
+            next_cubies[cycles[i][j]] = cubies[cycle[rotation_idxs[j]]];
         }
     }
-    pieces = cur;
+
+    cubies = next_cubies;
     return true;
 }

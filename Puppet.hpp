@@ -24,7 +24,7 @@ class Puppet{
     static constexpr std::array<uint8_t, NUM_CORNERS> solved_corners = {0, 1, 2, 3, 4, 5, 6};
     static constexpr std::array<uint8_t, NUM_EDGES> solved_edges = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 
-    static constexpr uint8_t turn_corners[NUM_MOVES][NUM_CORNER_VALS] = {
+    static constexpr uint8_t move_corners[NUM_MOVES][NUM_CORNER_VALS] = {
         {17, 14, 8, 9, 4, 5, 6, 3, 0, 15, 16, 11, 12, 13, 10, 7, 1, 2, 18, 19, 20}, // R
         {8, 16, 17, 7, 4, 5, 6, 15, 2, 3, 14, 11, 12, 13, 1, 9, 10, 0, 18, 19, 20}, // R'
         {2, 10, 0, 15, 4, 5, 6, 9, 17, 7, 1, 11, 12, 13, 16, 3, 14, 8, 18, 19, 20}, // R2
@@ -36,7 +36,7 @@ class Puppet{
         {13, 19, 2, 3, 4, 8, 14, 20, 5, 9, 10, 11, 15, 0, 6, 12, 16, 17, 18, 1, 7}  // F2
     };
 
-    static constexpr uint8_t turn_edges[NUM_MOVES][RANGE_EDGE_VALS] = {
+    static constexpr uint8_t move_edges[NUM_MOVES][RANGE_EDGE_VALS] = {
         {0, 18, 7, 3, 4, 5, 1, 22, 8, 255, 255, 255, 255, 255, 255, 255, 16, 2, 23, 19, 20, 21, 17, 6, 24}, // R
         {0, 6, 17, 3, 4, 5, 23, 2, 8, 255, 255, 255, 255, 255, 255, 255, 16, 22, 1, 19, 20, 21, 7, 18, 24}, // R'
         {0, 23, 22, 3, 4, 5, 18, 17, 8, 255, 255, 255, 255, 255, 255, 255, 16, 7, 6, 19, 20, 21, 2, 1, 24}, // R2
@@ -48,20 +48,12 @@ class Puppet{
         {21, 20, 2, 3, 17, 16, 6, 7, 8, 255, 255, 255, 255, 255, 255, 255, 5, 4, 18, 19, 1, 0, 22, 23, 24}  // F2
     };
 
-    // counter clockwise rotation
-    static constexpr std::array<uint8_t, NUM_CORNER_VALS> rotation_corners = {7, 3, 4, 5, 6, 1, 2, 14, 10, 11, 12, 13, 8, 9, 0, 17, 18, 19, 20, 15, 16};
-    static constexpr std::array<uint8_t, RANGE_EDGE_VALS> rotation_edges = {1, 2, 0, 5, 6, 7, 8, 3, 4, 255, 255, 255, 255, 255, 255, 255, 17, 18, 16, 21, 22, 23, 24, 19, 20};
-
-    // mirror over R-axis
-    static constexpr std::array<uint8_t, NUM_CORNER_VALS> mirror_corners = {0, 3, 2, 1, 6, 5, 4, 14, 17, 16, 15, 20, 19, 18, 7, 10, 9, 8, 13, 12, 11};
-    static constexpr std::array<uint8_t, RANGE_EDGE_VALS> mirror_edges = {0, 2, 1, 4, 3, 8, 7, 6, 5, 255, 255, 255, 255, 255, 255, 255, 16, 18, 17, 20, 19, 24, 23, 22, 21};
-
     static constexpr std::array<uint8_t, NUM_CORNER_VALS> position =    {0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6};
     static constexpr std::array<uint8_t, NUM_CORNER_VALS> orientation = {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2};
     static constexpr std::array<uint8_t, 8> corner_perms = {0, 1, 255, 2, 3, 255, 4, 5};
     static constexpr std::array<uint16_t, 7> pow3 = {0, 1, 3, 9, 27, 81, 243};
 
-    inline static const auto from7choose3 = [] {
+    inline static const auto from6choose3 = [] {
         std::array<std::array<uint8_t, 128>, 7> table{};
         for (auto& row : table) {
             row.fill(255);
@@ -85,6 +77,15 @@ class Puppet{
         return table;
     }();
 
+    // to calculate symmetries:
+    // counter clockwise rotation
+    static constexpr std::array<uint8_t, NUM_CORNER_VALS> rotation_corners = {7, 3, 4, 5, 6, 1, 2, 14, 10, 11, 12, 13, 8, 9, 0, 17, 18, 19, 20, 15, 16};
+    static constexpr std::array<uint8_t, RANGE_EDGE_VALS> rotation_edges = {1, 2, 0, 5, 6, 7, 8, 3, 4, 255, 255, 255, 255, 255, 255, 255, 17, 18, 16, 21, 22, 23, 24, 19, 20};
+
+    // mirror over R-axis
+    static constexpr std::array<uint8_t, NUM_CORNER_VALS> mirror_corners = {0, 3, 2, 1, 6, 5, 4, 14, 17, 16, 15, 20, 19, 18, 7, 10, 9, 8, 13, 12, 11};
+    static constexpr std::array<uint8_t, RANGE_EDGE_VALS> mirror_edges = {0, 2, 1, 4, 3, 8, 7, 6, 5, 255, 255, 255, 255, 255, 255, 255, 16, 18, 17, 20, 19, 24, 23, 22, 21};
+
     public:
         struct State{
             std::array<uint8_t, NUM_CORNERS> corners;
@@ -100,11 +101,11 @@ class Puppet{
         void turn(State& state, Move m);
 
         //uint32_t getCornerHash(const State& state);
-        uint32_t getShapeHash(const State&);
-        uint8_t getCornerIdx(const State& state);
-        uint32_t getEPIdx(const State& state);
-        uint8_t getFlipIdx(const State& state);
-        std::pair<uint32_t, uint8_t> getEdgeIdxs(const State& state);
+        uint32_t getShapeKey(const State&);
+        uint8_t getCornerRank(const State& state);
+        uint32_t getEPRank(const State& state);
+        uint8_t getEORank(const State& state);
+        std::pair<uint32_t, uint8_t> getEdgeRanks(const State& state);
 
         void rotate(State& state);
         void mirror(State& state);

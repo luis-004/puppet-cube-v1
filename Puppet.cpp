@@ -2,15 +2,6 @@
 Puppet::Puppet(){}
 
 void Puppet::getSolved(State& state){
-    /*for(int m = 0; m < 3; m++){ // WRONG ASSERTIONS! need to be changed
-        for (int i = 0; i < NUM_CORNER_VALS; ++i) {
-            assert(turn_corners[m+3][turn_corners[m][i]] == i);
-            assert(turn_corners[m][turn_corners[m+3][i]] == i);
-
-            assert(turn_corners[m][turn_corners[m][i]] == turn_corners[m+6][i]);
-            assert(turn_corners[m+6][turn_corners[m+6][i]] == i);
-        }
-    }*/
     state.corners = solved_corners;
     state.edges = solved_edges;
 }
@@ -21,41 +12,27 @@ bool Puppet::testSolved(const State& state){
 
 void Puppet::turn(State& state, Move m){
     for(auto &corner : state.corners){
-        corner = turn_corners[static_cast<uint8_t>(m)][corner];
+        corner = move_corners[static_cast<uint8_t>(m)][corner];
     }
     for(auto &edge : state.edges){
-        edge = turn_edges[static_cast<uint8_t>(m)][edge];
+        edge = move_edges[static_cast<uint8_t>(m)][edge];
     }
 }
 
-/*uint32_t Puppet::getCornerHash(const State& state){
-    uint32_t hash = 0;
-    uint8_t visited = 0;
-    for(uint8_t i = 1; i < NUM_CORNERS; i++){
-        hash *= NUM_CORNER_VALS - i * 3;
-        auto corner = state.corners[i];
-        auto pos = position[corner];
-        uint8_t idx = corner - 3 * __builtin_popcount(visited & ((1u << pos) - 1));
-        visited |= (1u << pos); // mark as visited
-        hash += idx;
-    }
-    return hash;
-}*/
-
-uint32_t Puppet::getShapeHash(const State& state){
+uint32_t Puppet::getShapeKey(const State& state){
     uint8_t permutation = 0;
-    uint16_t orientationHash = 0;
+    uint16_t orientation_key = 0;
     for(uint8_t i = 0; i < NUM_CORNERS; i++){
         auto corner = state.corners[i];
         auto pos = position[corner];
         permutation |= (i & 1u) << pos;
-        orientationHash +=  orientation[corner] * pow3[pos];
+        orientation_key +=  orientation[corner] * pow3[pos];
     }
-    return static_cast<uint32_t>(orientationHash) * 140u +
-       static_cast<uint32_t>(from7choose3[position[state.corners[0]]][permutation]);
+    return static_cast<uint32_t>(orientation_key) * 140u +
+       static_cast<uint32_t>(from6choose3[position[state.corners[0]]][permutation]);
 }
 
-uint8_t Puppet::getCornerIdx(const State& state){
+uint8_t Puppet::getCornerRank(const State& state){
     uint8_t a = position[state.corners[1]];
     uint8_t b = position[state.corners[3]];
     uint8_t c = position[state.corners[5]];
@@ -65,43 +42,43 @@ uint8_t Puppet::getCornerIdx(const State& state){
     return corner_perms[(a > b) | ((a > c) << 1) | ((b > c) << 2)] * 6 + corner_perms[(d > e) | ((d > f) << 1) | ((e > f) << 2)];
 }
 
-uint32_t Puppet::getEPIdx(const State& state){
-    uint32_t edgeIdx = 0;
+uint32_t Puppet::getEPRank(const State& state){
+    uint32_t rank = 0;
     uint16_t visited = 0;
     for(size_t i = 0; i < NUM_EDGES - 1; i++){
-        edgeIdx *= NUM_EDGES - i;
+        rank *= NUM_EDGES - i;
         auto edge = state.edges[i];
         edge &= ~(1u << FLIP_BIT); // unflip edge
         uint8_t idx = edge - __builtin_popcount(visited & ((1u << edge) - 1));
         visited |= (1u << edge); // mark as visited
-        edgeIdx += idx;
+        rank += idx;
     }
-    return edgeIdx;
+    return rank;
 }
 
-uint8_t Puppet::getFlipIdx(const State& state){
-    uint16_t flipIdx = 0;
+uint8_t Puppet::getEORank(const State& state){
+    uint16_t rank = 0;
     for(auto edge : state.edges){
-        flipIdx |= ((edge >> FLIP_BIT) << (edge & ~(1u << FLIP_BIT)));
+        rank |= ((edge >> FLIP_BIT) << (edge & ~(1u << FLIP_BIT)));
     }
-    return static_cast<uint8_t>(flipIdx);
+    return static_cast<uint8_t>(rank);
 }
 
-std::pair<uint32_t, uint8_t> Puppet::getEdgeIdxs(const State& state){
-    uint32_t edgeIdx = 0;
-    uint16_t flipIdx = 0;
+std::pair<uint32_t, uint8_t> Puppet::getEdgeRanks(const State& state){
+    uint32_t edgeRank = 0;
+    uint16_t flipRank = 0;
     uint16_t visited = 0;
     for(size_t i = 0; i < NUM_EDGES; i++){
         auto edge = state.edges[i];
-        flipIdx |= ((edge >> FLIP_BIT) << (edge & ~(1u << FLIP_BIT)));
+        auto edge_pos = edge & ~(1u << FLIP_BIT);
+        flipRank |= ((edge >> FLIP_BIT) << (edge_pos));
 
-        edgeIdx *= NUM_EDGES - i;
-        edge &= ~(1u << FLIP_BIT); // unflip edge
-        uint8_t idx = edge - __builtin_popcount(visited & ((1u << edge) - 1));
-        visited |= (1u << edge); // mark as visited
-        edgeIdx += idx;
+        edgeRank *= NUM_EDGES - i;
+        uint8_t idx = edge_pos - __builtin_popcount(visited & ((1u << edge_pos) - 1));
+        visited |= (1u << edge_pos); // mark as visited
+        edgeRank += idx;
     }
-    return {edgeIdx, static_cast<uint8_t>(flipIdx)};
+    return {edgeRank, static_cast<uint8_t>(flipRank)};
 }
 
 void Puppet::rotate(State& state){
@@ -194,7 +171,7 @@ Puppet::State Puppet::stateFromIdxs(uint32_t shape_hash, uint8_t corner_idx, uin
     bool found = 0;
     for(idxZero = 0; idxZero < 7; idxZero++){
         for(permutation = 0; permutation < 128; permutation++){
-            if(from7choose3[idxZero][permutation] == from7choose3_val){found = 1; break;} 
+            if(from6choose3[idxZero][permutation] == from7choose3_val){found = 1; break;} 
         }
         if(found)break;
     }

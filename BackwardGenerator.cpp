@@ -1,7 +1,7 @@
 #include "BackwardGenerator.hpp"
 
 BackwardGenerator::BackwardGenerator(const std::string& shape_info_file){
-    table.load_table(table.shape_info, shape_info_file);
+    table.load_table(table.shape_turns, shape_info_file);
 }
 
 std::vector<Move> BackwardGenerator::backward_moves(const uint16_t depth){
@@ -38,7 +38,7 @@ std::vector<Move> BackwardGenerator::backward_moves(const uint16_t depth){
         if(valid_turns.size() == 0){
             m = scramble.back();
             scramble.pop_back();
-            puppet.turn(state, getMove(getFace(m), getRevDir(getDir(m))));
+            puppet.turn(state, getMove(getFace(m), getReverseRotation(getRotation(m))));
             last_face = getFace(scramble.back());
             impossible_turns.at(length).clear();
             impossible_turns.at(length-1).push_back(static_cast<uint8_t>(m));
@@ -46,7 +46,7 @@ std::vector<Move> BackwardGenerator::backward_moves(const uint16_t depth){
         }
         std::uniform_int_distribution<> pick(0, valid_turns.size() - 1);
         m = static_cast<Move>(valid_turns[pick(gen)]);
-        uint16_t info = table.shape_info[puppet.getShapeHash(state)];
+        uint16_t info = table.shape_turns[puppet.getShapeKey(state)];
         if((info >> static_cast<uint8_t>(m)) & 1u){
             puppet.turn(state, m);
             last_face = getFace(m);

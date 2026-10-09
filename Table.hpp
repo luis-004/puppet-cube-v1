@@ -19,27 +19,27 @@
 #include "Move.hpp"
 #include "AlgMani.hpp"
 
-static constexpr size_t shape_table_size = 102060; // (7 choose 3) * 4 * 3^6
-static constexpr size_t num_shapes = 13174;
-static constexpr size_t CF_size = 2214*36*256;
-static constexpr size_t SE_size = 2214*362880;
-static constexpr size_t num_distinct_shapes = 2214;
-static constexpr size_t num_corner_permutations = 36;
-static constexpr size_t num_edge_permutations = 362880;
-static constexpr size_t num_edge_orientations = 256;
-static constexpr uint8_t repr_bit = 9; 
+static constexpr size_t SHAPE_TABLE_SIZE = 102060; // (7 choose 3) * 4 * 3^6
+static constexpr size_t NUM_SHAPES = 13174;
+static constexpr size_t CEO_SIZE = 13174*36*256;
+static constexpr size_t SEP_SIZE = 13174ULL * 362880;
+static constexpr size_t NUM_DISTINCT_SHAPES = 2214;
+static constexpr size_t NUM_CORNER_CYCLES = 36;
+static constexpr size_t NUM_EDGE_PERMUTATIONS = 362880;
+static constexpr size_t NUM_EDGE_ORIENTATIONS = 256;
+static constexpr uint8_t NUM_MOVES = 9; 
 
 class Table{
     Puppet puppet;
-    PuppetShape ps;
+    PuppetShape puppet_shape;
     AlgMani am;
 
     public:
         Table();
-        std::vector<uint16_t> shape_info;
-        std::vector<uint16_t> shape_index;
-        std::vector<uint8_t> table_CF;
-        std::vector<uint8_t> table_SE;
+        std::vector<uint16_t> shape_turns;
+        std::vector<uint16_t> rank_table;
+        std::vector<uint8_t> CEO_table;
+        std::vector<uint8_t> SEP_table;
 
         template <typename E> void write_table(const std::string& filename, const std::vector<E>& data){
             std::ofstream os(filename, std::ios::binary | std::ios::trunc);
@@ -112,13 +112,13 @@ class Table{
             }
         }
 
-        size_t CEO_index(const Puppet::State&);
-        size_t SEP_index(const Puppet::State&);
-        size_t EP_index(const Puppet::State&);
+        size_t CEO_Rank(const Puppet::State&);
+        size_t SEP_Rank(const Puppet::State&);
+        size_t EP_Rank(const Puppet::State&);
 
-        using IndexFunc = size_t (Table::*)(const Puppet::State&);
-        void shape_table();
+        using RankFunc = size_t (Table::*)(const Puppet::State&);
+        void getShapeTables();
         //void corner_table();
-        void table_full(const std::string& filename, const uint64_t entries, IndexFunc idxfunc);
-        void table_full_turn(const uint64_t entries, IndexFunc idxfunc);
+        void tableFull(const std::string& filename, const uint64_t entries, RankFunc idxfunc);
+        void table_full_turn(const uint64_t entries, RankFunc idxfunc);
 };

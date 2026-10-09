@@ -40,7 +40,7 @@ std::vector<Move>  AlgMani::translateYX2(std::vector<Move> alg){
     std::vector<Move> translatedAlg;
     for(auto turn : alg){
         uint8_t face = getFace(turn);
-        uint8_t dir = getDir(turn);
+        uint8_t dir = getRotation(turn);
         uint8_t newFace = translateFace[face];
         translatedAlg.push_back(getMove(newFace, dir));
         std::array<uint8_t, 4> movingCorners;
@@ -77,7 +77,7 @@ std::vector<Move>  AlgMani::translateYX2(std::vector<Move> alg){
 std::vector<Move>  AlgMani::reverse(std::vector<Move> alg){
     std::vector<Move> reversedAlg;
     for(int8_t i=alg.size()-1; i >= 0; i--){
-        reversedAlg.push_back(getMove(getFace(alg[i]), rev_dir[getDir(alg[i])]));
+        reversedAlg.push_back(getMove(getFace(alg[i]), rev_dir[getRotation(alg[i])]));
     }
     return reversedAlg;
 }
@@ -133,7 +133,7 @@ std::array<uint8_t, 6> AlgMani::getRUF(std::vector<Move> alg){
     for(auto turn : alg){
         turns[getFace(turn)]++;
         turns[getFace(turn)+3]++;
-        if(getDir(turn) == 2){
+        if(getRotation(turn) == 2){
             turns[getFace(turn)+3]++;
         }
     }
@@ -145,10 +145,10 @@ std::vector<Move> AlgMani::swap(std::vector<Move> alg, uint8_t stay){
     uint8_t new_face;
     for(auto turn : alg){
         if(getFace(turn) == stay){
-           swap_alg.push_back(getMove(getFace(turn), rev_dir[getDir(turn)]));
+           swap_alg.push_back(getMove(getFace(turn), rev_dir[getRotation(turn)]));
         }else{
             new_face = 3 - stay - getFace(turn); 
-            swap_alg.push_back(getMove(new_face, rev_dir[getDir(turn)]));
+            swap_alg.push_back(getMove(new_face, rev_dir[getRotation(turn)]));
         }
     }
     return swap_alg;
@@ -159,7 +159,7 @@ std::vector<Move>  AlgMani::twist(std::vector<Move> alg, bool dir){
     uint8_t new_face;
     for(auto turn : alg){
         new_face = (getFace(turn) + 1 + dir) % 3;
-        twist_alg.push_back(getMove(new_face, getDir(turn)));
+        twist_alg.push_back(getMove(new_face, getRotation(turn)));
     }
     return twist_alg;
 }
