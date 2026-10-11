@@ -307,7 +307,7 @@ std::vector<Move> Solver::beam_search(const Puppet::State& start){
     auto start_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration{0.0};
     auto now = start_time;
-    size_t size = 1000;
+    size_t size = 10000;
     struct node{
         Puppet::State state;
         Move last_turn;
@@ -366,10 +366,10 @@ std::vector<Move> Solver::beam_search(const Puppet::State& start){
         kids.resize(keep);
         std::swap(beam, kids);
         len++;
-        if(len > 1000){
+        /*if(len > 1000){
             std::cout << "Endless loop" << std::endl;
             return {};
-        }
+        }*/
     }
 }
 

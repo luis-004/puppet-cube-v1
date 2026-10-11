@@ -21,10 +21,13 @@ void Table::getShapeTables(){
     auto now = start_time;
     Puppet::State state;
     PuppetShape::Shape shape;
+    struct node{
+        Puppet::State state;
+        PuppetShape::Shape shape;
+        uint8_t last_face;
+    };
     bool bucket = 0;
-    //size_t already_visited = 0;
-    std::array<std::vector<std::vector<Move>>, 2> algs;
-    std::vector<Move> alg = {};
+    std::array<std::vector<node>, 2> states;
     std::vector<uint16_t> shape_turns;
     std::vector<uint8_t> valid_shapes;
     std::vector<uint16_t> shape_ranks;
@@ -32,7 +35,6 @@ void Table::getShapeTables(){
     valid_shapes.resize(SHAPE_TABLE_SIZE);
     shape_ranks.assign(SHAPE_TABLE_SIZE, UINT16_MAX);
     uint8_t num_turns = 1;
-    bool start = true;
     puppet.getSolved(state);
     puppet_shape.getCubeShape(shape);
     uint32_t key = puppet.getShapeKey(state);
@@ -40,30 +42,25 @@ void Table::getShapeTables(){
     valid_shapes[key] = 0b1111;
     shape_ranks[key] = 0;
     uint16_t rank = 1;
+    uint16_t states_visited = 1;
     uint8_t last_face = 255;
+    states[bucket].push_back({state, shape, last_face});
     while(true){
-        if(!algs[bucket].empty()){
-            alg = algs[bucket].back();
-            algs[bucket].pop_back();
-            puppet.getSolved(state);
-            puppet_shape.getCubeShape(shape);
-            for(auto move : alg){
-                puppet_shape.turn(shape, move);
-                puppet.turn(state, move);
-            }
-            last_face = getFace(alg.back());
-        }else if(!algs[!bucket].empty()){
+        if(!states[bucket].empty()){
+            state = states[bucket].back().state;
+            shape = states[bucket].back().shape;
+            last_face = states[bucket].back().last_face;
+            states[bucket].pop_back();
+        }else if(!states[!bucket].empty()){
             std::cout << "num turns:" << int(num_turns) << std::endl;
             std::cout << "num cases:" << int(rank) << std::endl;
-            //std::cout << "already visited:" << int(already_visited) <<  std::endl;
+            std::cout << "num visited:" << int(states_visited) << std::endl;
             now = std::chrono::high_resolution_clock::now();
             duration = now - start_time;
             std::cout << "time: " << duration.count() <<  std::endl << std::endl;
             num_turns++;
             bucket = !bucket;
             continue;
-        }else if(start){
-            start = false;
         }else{
             std::cout << "end" << std::endl;
             write_table("tables/shape_turns", shape_turns);
@@ -79,35 +76,23 @@ void Table::getShapeTables(){
         for(uint8_t face = 0; face < 3; ++face){
             bool half_turn_possible = false;
             for(uint8_t rotation = 0; rotation < 3; ++rotation){
-                if((half_turn_possible || rotation != 2) && puppet_shape.turn(shape, getMove(face, rotation))){
+                PuppetShape::Shape new_shape = shape;
+                if((half_turn_possible || rotation != 2) && puppet_shape.turn(new_shape, getMove(face, rotation))){
+                    states_visited++;
+                    half_turn_possible = true;
                     shape_turns[key] |= (1u << (face*3 + rotation)); // add valid turn
                     valid_shapes[key] |= (1u << 0);
                     if(rotation == 2){
                         valid_shapes[key] |= (1u << (face + 1));
                     }
-                    if(face == last_face){
-                        Move reverse_move = getMove(face, getReverseRotation(rotation));
-                        puppet_shape.turn(shape, reverse_move);
-                        half_turn_possible = true;
-                        continue;
-                    }
-                    puppet.turn(state, getMove(face, rotation));
-                    uint32_t new_key = puppet.getShapeKey(state);
+                    if(face == last_face) continue;
+                    Puppet::State new_state = state;
+                    puppet.turn(new_state, getMove(face, rotation));
+                    uint32_t new_key = puppet.getShapeKey(new_state);
                     if(shape_ranks[new_key] > rank){
                         shape_ranks[new_key] = rank++;
-                        alg.push_back(getMove(face, rotation));
-                        algs[!bucket].push_back(alg);
-                        alg.pop_back();
-                    }/*else{
-                        already_visited++;
-                        alg.push_back(getMove(face, dir));
-                        std::cout << am.translate(alg) << " "<< int(new_hash) << " " << " already visited" << std::endl;
-                        alg.pop_back();
-                    }*/
-                    Move reverse_move = getMove(face, getReverseRotation(rotation));
-                    puppet_shape.turn(shape, reverse_move);
-                    puppet.turn(state, reverse_move);
-                    half_turn_possible = true;
+                        states[!bucket].push_back({new_state, new_shape, face});
+                    }
                 }
             }
         }
