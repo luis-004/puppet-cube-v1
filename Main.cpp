@@ -37,25 +37,29 @@ int main(){
     //cout << "CORNERS FLIPS:" << endl;
     //table.tableFull("tables/CEO.heu", CEO_SIZE, &Table::CEO_Rank);
     //cout << "SHAPE EDGES:" << endl;
-    table.getShapeTables();
+    //table.getShapeTables();
     //table.table_full("shape_ep_full.heu", num_shapes*num_edge_permutations, &Table::SEP_index);
     //table.tableFullurn(num_shapes*num_corner_permutations*num_edge_orientations, &Table::CEO_index);
     //std::cout << "loading tables" << std::endl;
-    //Solver solver("tables/shape_ranks", "tables/shape_turns", "tables/corner_flip_full.heu", "tables/shape_ep_full.heu");
+    Solver solver("tables/shape_ranks", "tables/shape_turns", "tables/corner_flip_full.heu", "tables/shape_ep_full.heu");
     //solver.gods_mirror(&Solver::astar);
     //std::cout << "loaded" << std::endl;
-    //solver.scramble_set("500_sorted", 500, &Solver::astar, true);
-    //solver.solve_scramble_set("results/500_sort_ofc", &Solver::beam_search);
-    /*auto scramble = solver.random_state(&Solver::iterative_deepening);
+    //solver.scramble_set_random_moves("500_random", 500, 1000, [&](const Puppet::State& s) { return solver.astar(s);}, true);
+    //solver.scramble_set_decreasing_random_states("tables/decreasing_set", 25, {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}, true);
+    solver.solve_scramble_set("results/500_random", [&](const Puppet::State& s) { return solver.astar(s);});
+    /*auto scramble = solver.random_state([&](const Puppet::State& s) { return solver.iterative_deepening(s, 25);});
     std::cout << "Ready" << std::endl;
     size_t count = 0;
     while(true){
         getline(std::cin, input);
-        std::cout << ++count << " " << am.translate(am.translateYX2(scramble)) << scramble.size() << endl;
+        if(scramble.empty()){
+            std::cout << "no sol found in xx moves" << std::endl;
+        }else{std::cout << ++count << " " << am.translate(am.translateYX2(scramble)) << scramble.size() << endl;}
+        
         if (input == "q") break;
         if (input == "c") system("cls");
         //system("cls");
-        scramble = solver.random_state(&Solver::iterative_deepening);
+        scramble = solver.random_state([&](const Puppet::State& s) { return solver.iterative_deepening(s, 25);});
     }
     cin.get();*/
     //BackwardGenerator bg("lookup/Shape_info");

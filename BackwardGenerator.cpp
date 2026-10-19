@@ -78,7 +78,7 @@ void BackwardGenerator::scramble_set_backward_moves(const std::string& filename,
 
 void BackwardGenerator::scramble_set_backward_moves_increasing(const std::string& filename, const uint16_t start_depth, const std::vector<size_t> count_per_depth){
     std::vector<std::array<Move, 50>> scrambles;
-    for(size_t depth = start_depth; depth < count_per_depth.size(); depth++){
+    for(size_t depth = start_depth; depth < start_depth + count_per_depth.size(); depth++){
         if(depth > 50){break;}
         for(size_t c = 0; c < count_per_depth[depth - start_depth]; c++){
             std::vector<Move> scramble = backward_moves(depth);
