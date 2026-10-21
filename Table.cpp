@@ -11,9 +11,9 @@ size_t Table::SEP_Rank(const Puppet::State& state){
     return rank_table[puppet.getShapeKey(state)] * NUM_EDGE_PERMUTATIONS + puppet.getEPRank(state);
 }
 
-size_t Table::EP_Rank(const Puppet::State& state){
-    return puppet.getEPRank(state);
- }
+size_t Table::E_Rank(const Puppet::State& state){
+    return  puppet.getEPRank(state) * NUM_EDGE_ORIENTATIONS  + puppet.getEORank(state);
+}
 
 void Table::getShapeTables(){
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -78,7 +78,6 @@ void Table::getShapeTables(){
             for(uint8_t rotation = 0; rotation < 3; ++rotation){
                 PuppetShape::Shape new_shape = shape;
                 if((half_turn_possible || rotation != 2) && puppet_shape.turn(new_shape, getMove(face, rotation))){
-                    states_visited++;
                     half_turn_possible = true;
                     shape_turns[key] |= (1u << (face*3 + rotation)); // add valid turn
                     valid_shapes[key] |= (1u << 0);
@@ -86,6 +85,7 @@ void Table::getShapeTables(){
                         valid_shapes[key] |= (1u << (face + 1));
                     }
                     if(face == last_face) continue;
+                    states_visited++;
                     Puppet::State new_state = state;
                     puppet.turn(new_state, getMove(face, rotation));
                     uint32_t new_key = puppet.getShapeKey(new_state);
@@ -152,10 +152,12 @@ void Table::tableFull(const std::string& filename, const uint64_t num_entries, R
             std::cout << "time: " << duration.count() <<  std::endl;
             return;
         }
-        uint16_t valid_turns = shape_turns[puppet.getShapeKey(state)];
-        uint8_t move_idx;
-        while((move_idx = __builtin_ctz(valid_turns)) < NUM_MOVES){ // get idx of least significant 1
-            valid_turns &= valid_turns - 1; // set least significant 1 to 0
+        //uint16_t valid_turns = shape_turns[puppet.getShapeKey(state)];
+        //uint8_t move_idx;
+        //while((move_idx = __builtin_ctz(valid_turns)) < NUM_MOVES){ // get idx of least significant 1
+        for(uint8_t move_idx = 0; move_idx < NUM_MOVES; move_idx++){
+            //std::cout << "move" << count <<  std::endl;
+            //valid_turns &= valid_turns - 1; // set least significant 1 to 0
             Move m = static_cast<Move>(move_idx);
             uint8_t face = getFace(m);
             if(last_face == face) continue;

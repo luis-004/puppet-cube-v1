@@ -21,8 +21,9 @@
 
 static constexpr size_t SHAPE_TABLE_SIZE = 102060; // (7 choose 3) * 4 * 3^6
 static constexpr size_t NUM_SHAPES = 13174;
-static constexpr size_t CEO_SIZE = 13174*36*256;
+static constexpr size_t CEO_SIZE = 13174 * 36 * 256;
 static constexpr size_t SEP_SIZE = 13174ULL * 362880;
+static constexpr size_t E_SIZE =  362880ULL * 256;
 static constexpr size_t NUM_DISTINCT_SHAPES = 2214;
 static constexpr size_t NUM_CORNER_CYCLES = 36;
 static constexpr size_t NUM_EDGE_PERMUTATIONS = 362880;
@@ -40,6 +41,7 @@ class Table{
         std::vector<uint16_t> rank_table;
         std::vector<uint8_t> CEO_table;
         std::vector<uint8_t> SEP_table;
+        std::vector<uint8_t> E_table;
 
         template <typename E> void write_table(const std::string& filename, const std::vector<E>& data){
             std::ofstream os(filename, std::ios::binary | std::ios::trunc);
@@ -79,7 +81,7 @@ class Table{
             std::ifstream cor(file, std::ios::binary | std::ios::ate); // 'ate' springt zum Ende
             //std::cout << "file: "<< std::endl;
             //std::cout << std::filesystem::absolute(file) << '\n';
-            if (!cor){ std::cout << "file not found" << std::endl; return;}
+            if (!cor){ std::cout << "file not found: " << file << std::endl; return;}
             std::streamsize fileSize = cor.tellg();
             cor.seekg(0, std::ios::beg);
             size_t numEntries = fileSize / sizeof(E); 
@@ -88,7 +90,7 @@ class Table{
         }
         template <typename E> void load_large_table(std::vector<E>& table, const std::string& file){
             std::ifstream cor(file, std::ios::binary | std::ios::ate);
-            if (!cor) return;
+            if (!cor) { std::cout << "file not found: " << file << std::endl; return;}
 
             std::streamsize fileSize = cor.tellg();
             cor.seekg(0, std::ios::beg);
@@ -114,7 +116,7 @@ class Table{
 
         size_t CEO_Rank(const Puppet::State&);
         size_t SEP_Rank(const Puppet::State&);
-        size_t EP_Rank(const Puppet::State&);
+        size_t E_Rank(const Puppet::State&);
 
         using RankFunc = size_t (Table::*)(const Puppet::State&);
         void getShapeTables();
