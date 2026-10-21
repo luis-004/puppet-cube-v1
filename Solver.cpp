@@ -28,7 +28,7 @@ Solver::Solver(const std::string& shape_index_file, const std::string& shape_inf
 uint8_t Solver::getHeuVal(const Puppet::State& state){
     auto EdgeIdxs = puppet.getEdgeRanks(state);
     auto ShapeIdx = table.rank_table[puppet.getShapeKey(state)];
-    uint8_t cfVal = table.CEO_table[ShapeIdx * NUM_CORNER_CYCLES * NUM_EDGE_ORIENTATIONS + puppet.getCornerRank(state) * NUM_EDGE_ORIENTATIONS + EdgeIdxs.second]; // puppet.getFlipIdx(state)
+    uint8_t cfVal = table.CEO_table[(ShapeIdx * NUM_CORNER_CYCLES + puppet.getCornerRank(state)) * NUM_EDGE_ORIENTATIONS + EdgeIdxs.second]; // puppet.getFlipIdx(state)
     uint8_t seVal = table.SEP_table[ShapeIdx * NUM_EDGE_PERMUTATIONS + EdgeIdxs.first]; // puppet.getEPIdx(state)
     //uint8_t cfVal = table.table_CF[table.CEO_index(state)];
     //uint8_t seVal = table.table_SE[table.SEP_index(state)];
