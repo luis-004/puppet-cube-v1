@@ -78,7 +78,6 @@ void Table::getShapeTables(){
             for(uint8_t rotation = 0; rotation < 3; ++rotation){
                 PuppetShape::Shape new_shape = shape;
                 if((half_turn_possible || rotation != 2) && puppet_shape.turn(new_shape, getMove(face, rotation))){
-                    states_visited++;
                     half_turn_possible = true;
                     shape_turns[key] |= (1u << (face*3 + rotation)); // add valid turn
                     valid_shapes[key] |= (1u << 0);
@@ -86,6 +85,7 @@ void Table::getShapeTables(){
                         valid_shapes[key] |= (1u << (face + 1));
                     }
                     if(face == last_face) continue;
+                    states_visited++;
                     Puppet::State new_state = state;
                     puppet.turn(new_state, getMove(face, rotation));
                     uint32_t new_key = puppet.getShapeKey(new_state);
