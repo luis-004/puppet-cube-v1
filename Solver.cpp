@@ -48,7 +48,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
     node cur;
     node next;
     Puppet::State state = start;
-    uint8_t queue = 0;
+    uint8_t bucket = 0;
     std::array<std::vector<node>, 3> found;
     found[0].push_back({state, {}, 0, getHeuVal(start)});
     size_t nodes_gen = 1;
@@ -58,12 +58,12 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
         if(size > max_nodes){
             max_nodes = size;
         }
-        if(found[queue].empty()){
-            queue = (queue + 1) % 3; 
+        if(found[bucket].empty()){
+            bucket = (bucket + 1) % 3; 
             continue;
         }
-        cur = found[queue].back();
-        found[queue].pop_back();
+        cur = found[bucket].back();
+        found[bucket].pop_back();
         state = cur.state;
         uint8_t last_face = cur.len > 0 ? getFace(cur.alg[cur.len-1]) : 255;
         uint16_t valid_turns = table.shape_turns[puppet.getShapeKey(state)];
@@ -93,7 +93,7 @@ std::vector<Move> Solver::astar(const Puppet::State& start){
             next.alg[cur.len] = m;
             next.len = cur.len + 1;
             next.value = newval;
-            found[(queue + 1 + newval - cur.value)%3].push_back(next);
+            found[(bucket + 1 + newval - cur.value)%3].push_back(next);
             nodes_gen++;
         }
     }
