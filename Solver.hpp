@@ -40,6 +40,7 @@ class Solver{
         std::vector<Move> bwas(const Puppet::State& start, const size_t batch_size, const double depthPenalty);
         std::vector<Move> astar_parent_nodes(const Puppet::State& start);
         std::vector<Move> iterative_deepening(const Puppet::State& start, const size_t max_depth);
+        std::vector<Move> iterative_deepening_rec(const Puppet::State& start, const size_t max_depth);
         std::vector<Move> beam_search(const Puppet::State& start, const size_t width);
 
         using solvefunc = std::function<std::vector<Move>(const Puppet::State&)>;

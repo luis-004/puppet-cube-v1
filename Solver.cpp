@@ -468,6 +468,54 @@ std::vector<Move> Solver::iterative_deepening(const Puppet::State& start, const 
     return {};
 }
 
+std::vector<Move> Solver::iterative_deepening_rec(const Puppet::State& start, const size_t max_depth){
+    const int h0 = getHeuVal(start);
+    if(h0 == 0) return {};
+
+    std::vector<Move> path(max_depth + 1);
+    size_t path_len = 0;
+    size_t nodes_gen = 0;
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    auto dfs = [&](auto& self, const Puppet::State& s, int g, int h, int bound,
+                   uint8_t last_face, int& next_bound) -> bool {
+        int f = g + h;
+        if(f > bound){ next_bound = std::min(next_bound, f); return false; }
+        if(g >= (int)max_depth) return false;    // Kinder wären tiefer als max_depth
+
+        uint16_t info = table.shape_turns[puppet.getShapeKey(s)];
+        uint8_t i;
+        while((i = __builtin_ctz(info)) < NUM_MOVES){
+            info &= info - 1;
+            Move m = static_cast<Move>(i);
+            uint8_t face = getFace(m);
+            if(face == last_face) continue;
+
+            Puppet::State nxt = s;
+            puppet.turn(nxt, m);
+            int nh = getHeuVal(nxt);
+            nodes_gen++;
+            path[g] = m;
+            if(nh == 0){ path_len = g + 1; return true; }
+            if(self(self, nxt, g + 1, nh, bound, face, next_bound)) return true;
+        }
+        return false;
+    };
+
+    int bound = h0;
+    while(bound <= (int)max_depth){
+        int next_bound = INT_MAX;
+        if(dfs(dfs, start, 0, h0, bound, 255, next_bound)){
+            std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - start_time;
+            std::cout << duration.count() << "," << nodes_gen << "," << path_len << std::endl;
+            return std::vector<Move>(path.begin(), path.begin() + path_len);
+        }
+        if(next_bound == INT_MAX) break;         // nichts mehr abgeschnitten: Suchraum erschöpft
+        bound = next_bound;
+    }
+    return {};                                   // bis max_depth nichts gefunden
+}
+
 std::vector<Move> Solver::beam_search(const Puppet::State& start, const size_t width){
     auto start_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration{0.0};
