@@ -43,12 +43,12 @@ int main(){
     //table.table_full("shape_ep_full.heu", num_shapes*num_edge_permutations, &Table::SEP_index);
     //table.tableFullurn(num_shapes*num_corner_permutations*num_edge_orientations, &Table::CEO_index);
     //std::cout << "loading tables" << std::endl;
-    Solver solver("tables/shape_ranks", "tables/shape_turns", "lookup/CEO.heu", "lookup/SEP.heu");
+    Solver solver("tables/shape_ranks", "tables/shape_turns", "PDBs/CEO.heu", "PDBs/SEP.heu");
     //solver.gods_mirror(&Solver::astar);
     //std::cout << "loaded" << std::endl;
     //solver.scramble_set_random_moves("500_random", 500, 1000, [&](const Puppet::State& s) { return solver.astar(s);}, true);
     //solver.scramble_set_decreasing_random_states("tables/decreasing_set", 35, {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20}, true);
-    solver.solve_scramble_set("results/decreasing_set", [&](const Puppet::State& s) { return solver.astar(s);});
+    solver.solve_scramble_set("scramblesets/decreasing_set", [&](const Puppet::State& s) { return solver.bwas(s, 10000, 0.2);});
     /*auto scramble = solver.random_state([&](const Puppet::State& s) { return solver.iterative_deepening(s, 25);});
     std::cout << "Ready" << std::endl;
     size_t count = 0;

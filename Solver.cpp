@@ -154,8 +154,8 @@ std::vector<Move> Solver::astar_weighted(const Puppet::State& start, const doubl
                         alg.push_back(cur.alg[i]);
                     }
                     alg.push_back(m);
-                    /*std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << nodes_gen << " maximum nodes stored: "<< max_nodes 
-                    << " nodes per second: " << double(duration.count() > 0 ? nodes_gen / double(duration.count()) : 0.0) << " states already seen: "<< dup_total << std::endl;*/
+                    //std::cout << "solution found. time: " << duration.count() <<" nodes generated: " << nodes_gen << " maximum nodes stored: "<< max_nodes 
+                    //<< " nodes per second: " << double(duration.count() > 0 ? nodes_gen / double(duration.count()) : 0.0) << " states already seen: "<< dup_total << std::endl;
                     std::cout << am.translate(alg) << "  " << int(cur.len + 1) << std::endl;
                     std::cout << duration.count() << "," << nodes_gen << "," << max_nodes << "," << int(cur.len + 1) << "," << std::endl;
                     return alg;
@@ -184,6 +184,164 @@ std::vector<Move> Solver::astar_weighted(const Puppet::State& start, const doubl
         }
     }
     return {}; 
+}
+
+std::vector<Move> Solver::bwas(const Puppet::State& start, const size_t batch_size, const double depthPenalty){
+    struct Node {
+        Puppet::State state;
+        int depth;
+        int parentMove;
+        float cost;
+        uint8_t heuristic;
+        Node *parent;
+        bool operator==(const Node &other) const {
+            return state == other.state;
+        }
+    };
+    struct Hash {
+        size_t operator() (const Node *node) const {
+            std::size_t seed = 0;
+            boost::hash_range(seed, std::begin((node->state).corners), std::end((node->state).corners));
+            boost::hash_range(seed, std::begin((node->state).edges), std::end((node->state).edges));
+            return seed;
+        }
+    };
+    struct NodePointerEq {
+        bool operator () ( Node const *lhs, Node const *rhs ) const {
+            return lhs->state == rhs->state;
+        }
+    };
+    auto cmp = [depthPenalty](const Node* a, const Node* b){
+        return a->cost > b->cost;
+    };
+    std::priority_queue<Node*, std::vector<Node*>, decltype(cmp)> open(cmp);
+    std::unordered_set<Node*, Hash, NodePointerEq> closed;
+
+    auto search_start_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration{0.0};
+    auto now = search_start_time;
+    Puppet::State state = start;
+    std::cout << "heuval: " << int(getHeuVal(state)) << std::endl;
+	open.push(new Node{state,0,-1,0,0,NULL}); //Push root node to open
+	closed.insert(new Node{state,0,-1,0,0,NULL}); //Add root node to seen
+    int searchItr = 1;
+	long numNodesGenerated = 1;
+	bool isSolved = false;
+    Node *solvedNode = NULL;
+    while (isSolved == false) {
+		//std::chrono::high_resolution_clock::time_point startTime, t1;
+
+		//startTime = std::chrono::high_resolution_clock::now();
+
+		// Remove from open
+		int openSize = (int) open.size();
+		int numPop = std::min(openSize, int(batch_size));
+		std::vector<Node*> popped;
+
+		//t1 = std::chrono::high_resolution_clock::now();
+		bool goal_node_found_prev = solvedNode != NULL;
+		for (int i=0; i<numPop; i++) {
+			Node *node = open.top();
+			popped.push_back(node);
+			open.pop();
+
+			bool isSolved_itr = puppet.testSolved(node->state);
+			if (isSolved_itr) {
+			    if (batch_size == 1) {
+				    solvedNode = node;
+			        isSolved = true;
+			    } else {
+                    if (solvedNode == NULL) {
+                        solvedNode = node;
+                    } else if (solvedNode->cost > node->cost) {
+                        solvedNode = node;
+                    }
+			    }
+			    break;
+			}
+		}
+		if (goal_node_found_prev && (popped[0]->cost >= solvedNode->cost)) {
+		    isSolved = true;
+		}
+		
+		//t1 = std::chrono::high_resolution_clock::now();
+        // Expand
+
+		std::vector<Node*> children(popped.size()*NUM_MOVES);
+        #pragma omp parallel for
+		for (unsigned int i=0; i<popped.size(); i++) {
+            uint16_t valid_moves = table.shape_turns[puppet.getShapeKey(popped[i]->state)];
+            uint8_t move_idx;
+            while((move_idx = __builtin_ctz(valid_moves)) < NUM_MOVES){
+                valid_moves &= valid_moves - 1;
+                Move m = static_cast<Move>(move_idx);
+                if(getFace(m) == getFace(static_cast<Move>(popped[i]->parentMove))) continue;
+                Puppet::State next = popped[i]->state;
+                puppet.turn(next, m);
+                uint8_t heuval = getHeuVal(next);
+                float cost = heuval + depthPenalty*((float) popped[i]->depth + 1);
+                Node *node = new Node{next,popped[i]->depth + 1,move_idx,cost,heuval,popped[i]};
+                children[i*NUM_MOVES + move_idx] = node;
+            }
+		}
+
+        children.erase(std::remove(children.begin(), children.end(), nullptr), children.end());
+		if(children.size() == 0){continue;}
+
+        //Check if in closed
+		//t1 = std::chrono::high_resolution_clock::now();
+		std::vector<Node*> nodesToAdd;
+		std::vector<int> nodesToAdd_idx;
+		for (unsigned int i=0; i<children.size(); i++) {
+			Node *node = children[i];
+			std::unordered_set<Node*, Hash, NodePointerEq>::const_iterator found = closed.find(node);
+            if (found == closed.end()) {
+                closed.insert(node);
+                nodesToAdd.push_back(node);
+                nodesToAdd_idx.push_back(i);
+            } else if ((*found)->depth > node->depth) {
+                (*found)->depth = node->depth;
+                (*found)->parentMove = node->parentMove;
+                (*found)->parent = node->parent;
+
+                nodesToAdd.push_back(node);
+                nodesToAdd_idx.push_back(i);
+            } else {
+                delete node;
+            }
+		}
+		numNodesGenerated += children.size();
+
+        // add to open
+        for (unsigned int i=0; i<nodesToAdd.size(); i++) {
+			Node *nodeToAdd = nodesToAdd[i];
+			open.push(nodeToAdd);
+		}
+
+        searchItr++;
+
+        now = std::chrono::high_resolution_clock::now();
+        duration = now - search_start_time;
+        std::cout << "time: " << duration.count() <<" iterations: " << searchItr << " nodes generated: " << numNodesGenerated << std::endl;
+    }
+    std::vector<Move> buf;
+    Node *currNode = solvedNode;
+    while (currNode->depth > 0) {
+        buf.push_back(static_cast<Move>(currNode->parentMove));
+        currNode = currNode->parent;
+    }
+    std::vector<Move> solution;
+    while(!buf.empty()){
+        Move m = buf.back();
+        buf.pop_back();
+        solution.push_back(m);
+    }
+    now = std::chrono::high_resolution_clock::now();
+    duration = now - search_start_time;
+    std::cout << "time: " << duration.count() << " iterations: " << searchItr <<" nodes generated: " << numNodesGenerated <<
+        " nodes per second: " << double(duration.count() > 0 ?  numNodesGenerated / double(duration.count()) : 0.0) << std::endl;
+    std::cout << am.translate(am.reverse(solution)) << std::endl;
+    return solution;
 }
 
 std::vector<Move> Solver::astar_parent_nodes(const Puppet::State& start){
