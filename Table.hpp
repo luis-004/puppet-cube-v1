@@ -76,10 +76,8 @@ class Table{
         }
 
         template <typename E> void load_table(std::vector<E>& table, const std::string& file){
-            std::ifstream cor(file, std::ios::binary | std::ios::ate); // 'ate' springt zum Ende
-            //std::cout << "file: "<< std::endl;
-            //std::cout << std::filesystem::absolute(file) << '\n';
-            if (!cor){ std::cout << "file not found" << std::endl; return;}
+            std::ifstream cor(file, std::ios::binary | std::ios::ate);
+            if (!cor){ std::cout << "file not found: " << file << std::endl; return;}
             std::streamsize fileSize = cor.tellg();
             cor.seekg(0, std::ios::beg);
             size_t numEntries = fileSize / sizeof(E); 
@@ -88,7 +86,7 @@ class Table{
         }
         template <typename E> void load_large_table(std::vector<E>& table, const std::string& file){
             std::ifstream cor(file, std::ios::binary | std::ios::ate);
-            if (!cor) return;
+            if (!cor) { std::cout << "file not found: " << file << std::endl; return;}
 
             std::streamsize fileSize = cor.tellg();
             cor.seekg(0, std::ios::beg);
@@ -98,14 +96,14 @@ class Table{
 
             char* buffer = reinterpret_cast<char*>(table.data());
             std::streamsize remaining = fileSize;
-            std::streamsize chunkSize = 512 * 1024 * 1024; // 512 MB Blöcke
+            std::streamsize chunkSize = 512 * 1024 * 1024;
 
             while (remaining > 0) {
                 std::streamsize toRead = std::min(remaining, chunkSize);
                 cor.read(buffer, toRead);
                 
                 std::streamsize actualRead = cor.gcount();
-                if (actualRead == 0) break; // Fehler oder Dateiende
+                if (actualRead == 0) break;
 
                 buffer += actualRead;
                 remaining -= actualRead;

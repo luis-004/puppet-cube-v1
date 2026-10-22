@@ -221,7 +221,7 @@ std::vector<Move> Solver::bwas(const Puppet::State& start, const size_t batch_si
     std::chrono::duration<double> duration{0.0};
     auto now = search_start_time;
     Puppet::State state = start;
-    std::cout << "heuval: " << int(getHeuVal(state)) << std::endl;
+    //std::cout << "heuval: " << int(getHeuVal(state)) << std::endl;
 	open.push(new Node{state,0,-1,0,0,NULL}); //Push root node to open
 	closed.insert(new Node{state,0,-1,0,0,NULL}); //Add root node to seen
     int searchItr = 1;
@@ -320,9 +320,9 @@ std::vector<Move> Solver::bwas(const Puppet::State& start, const size_t batch_si
 
         searchItr++;
 
-        now = std::chrono::high_resolution_clock::now();
-        duration = now - search_start_time;
-        std::cout << "time: " << duration.count() <<" iterations: " << searchItr << " nodes generated: " << numNodesGenerated << std::endl;
+        //now = std::chrono::high_resolution_clock::now();
+        //duration = now - search_start_time;
+        //std::cout << "time: " << duration.count() <<" iterations: " << searchItr << " nodes generated: " << numNodesGenerated << std::endl;
     }
     std::vector<Move> buf;
     Node *currNode = solvedNode;
@@ -339,8 +339,8 @@ std::vector<Move> Solver::bwas(const Puppet::State& start, const size_t batch_si
     now = std::chrono::high_resolution_clock::now();
     duration = now - search_start_time;
     std::cout << "time: " << duration.count() << " iterations: " << searchItr <<" nodes generated: " << numNodesGenerated <<
-        " nodes per second: " << double(duration.count() > 0 ?  numNodesGenerated / double(duration.count()) : 0.0) << std::endl;
-    std::cout << am.translate(am.reverse(solution)) << std::endl;
+        " nodes per second: " << double(duration.count() > 0 ?  numNodesGenerated / double(duration.count()) : 0.0) << " solution length: " << int(solution.size()) << std::endl;
+    //std::cout << am.translate(am.reverse(solution)) << std::endl;
     return solution;
 }
 
