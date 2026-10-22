@@ -510,10 +510,10 @@ std::vector<Move> Solver::iterative_deepening_rec(const Puppet::State& start, co
             std::cout << duration.count() << "," << nodes_gen << "," << path_len << std::endl;
             return std::vector<Move>(path.begin(), path.begin() + path_len);
         }
-        if(next_bound == INT_MAX) break;         // nichts mehr abgeschnitten: Suchraum erschöpft
+        if(next_bound == INT_MAX) break;
         bound = next_bound;
     }
-    return {};                                   // bis max_depth nichts gefunden
+    return {};
 }
 
 std::vector<Move> Solver::beam_search(const Puppet::State& start, const size_t width){
@@ -767,113 +767,4 @@ void Solver::solve_scramble_set(const std::string& filename, const solvefunc& so
     now = std::chrono::high_resolution_clock::now();
     duration = now - start_time;
     std::cout << "endtime: " << duration.count() << std::endl;
-}
-
-void Solver::god(const solvefunc& solve){
-    uint8_t maxCF = 27;
-    uint8_t maxSE = 30;
-
-    size_t gods_number = 0;
-    while(maxSE + maxCF > 0){
-        std::cout << "new era: " << size_t(maxCF) << " " << size_t(maxSE) << std::endl;
-        for(size_t i = 0; i < NUM_SHAPES * NUM_CORNER_CYCLES * NUM_EDGE_ORIENTATIONS; i++){
-            if(table.CEO_table[i] == maxCF){
-                size_t shape = i / (NUM_CORNER_CYCLES * NUM_EDGE_ORIENTATIONS);
-                for(size_t j = shape * NUM_EDGE_PERMUTATIONS; j <  (shape + 1) * NUM_EDGE_PERMUTATIONS; j++){
-                    if(table.SEP_table[j] == maxSE){
-                        size_t shapeHash = 0;
-                        for(shapeHash = 0; shapeHash < SHAPE_TABLE_SIZE; shapeHash++){
-                            if(table.rank_table[shapeHash] == shape) break;
-                        }
-                        Puppet::State start = puppet.stateFromIdxs(shapeHash, 
-                        (i % (NUM_CORNER_CYCLES * NUM_EDGE_ORIENTATIONS)) / NUM_EDGE_ORIENTATIONS,
-                        j % (NUM_EDGE_PERMUTATIONS), 
-                        (i % (NUM_CORNER_CYCLES * NUM_EDGE_ORIENTATIONS)) % NUM_EDGE_ORIENTATIONS);
-                        puppet.fixParity(start);
-                        auto alg = solve(start);
-                        if(alg.size() > gods_number){
-                            gods_number = alg.size();
-                            std::cout << size_t(puppet.getShapeKey(start)) << " " 
-                            << size_t(puppet.getCornerRank(start)) << " " 
-                            << size_t(puppet.getEPRank(start)) << " " 
-                            << size_t(puppet.getEORank(start)) << std::endl;     
-                            std::cout << am.translate(am.translateYX2(am.reverse(alg))) << " " << size_t(alg.size()) << std::endl;
-                        }                      
-                    }
-                }
-            }
-        }
-        maxSE > maxCF ? maxSE-- : maxCF--;
-    }
-}
-
-void Solver::gods_mirror(const solvefunc& solve){
-    Puppet::State state;
-    puppet.getSolved(state);
-    std::vector<uint32_t> sym_corners;
-    for(size_t corner = 0; corner <  NUM_SHAPES * NUM_CORNER_CYCLES; corner++){
-        Puppet::State start = puppet.stateFromIdxs(corner/NUM_CORNER_CYCLES, corner%NUM_CORNER_CYCLES,
-        puppet.getEPRank(state), puppet.getEORank(state));
-        Puppet::State sym = start;
-        for(int j = 0; j < 5; j++){
-            if(j == 2){
-                puppet.mirror(sym);
-            }else{
-                puppet.rotate(sym);
-            }
-            if(sym == start){
-                sym_corners.push_back(corner);
-                break;
-            }
-        }
-    }
-    std::cout << "all symmetric corner cases found" << std::endl;
-
-    puppet.getSolved(state);
-    std::vector<uint32_t> sym_edges;
-    for(size_t edge = 0; edge <  NUM_EDGE_PERMUTATIONS * NUM_EDGE_ORIENTATIONS; edge++){
-        Puppet::State start = puppet.stateFromIdxs(puppet.getShapeKey(state), puppet.getCornerRank(state),
-        edge / NUM_EDGE_ORIENTATIONS, edge % NUM_EDGE_ORIENTATIONS);
-        Puppet::State sym = start;
-        for(int j = 0; j < 5; j++){
-            if(j == 2){
-                puppet.mirror(sym);
-            }else{
-                puppet.rotate(sym);
-            }
-            if(sym == start){
-                sym_edges.push_back(edge);
-                break;
-            }
-        }
-    }
-    std::cout << "all symmetric edge cases found" << std::endl;
-
-    size_t gods_number = 0;
-    for(size_t corners = 0; corners < sym_corners.size(); corners++){
-        std::cout << "new corner era" << std::endl;
-        for(size_t edges = 0; edges < sym_edges.size(); edges++){
-            size_t shape = sym_corners[corners]/NUM_CORNER_CYCLES;
-            if(table.CEO_table[shape * NUM_CORNER_CYCLES * NUM_EDGE_ORIENTATIONS +  
-            sym_corners[corners]%NUM_CORNER_CYCLES * NUM_EDGE_ORIENTATIONS + sym_edges[edges] % NUM_EDGE_ORIENTATIONS] +
-            table.SEP_table[shape * NUM_EDGE_PERMUTATIONS + sym_edges[edges] / NUM_EDGE_ORIENTATIONS] > 40){
-                size_t shapeHash = 0;
-                for(shapeHash = 0; shapeHash < SHAPE_TABLE_SIZE; shapeHash++){
-                    if(table.rank_table[shapeHash] == shape) break;
-                }
-                Puppet::State start = puppet.stateFromIdxs(shapeHash, sym_corners[corners]%NUM_CORNER_CYCLES,
-                sym_edges[edges] / NUM_EDGE_ORIENTATIONS, sym_edges[edges] % NUM_EDGE_ORIENTATIONS);
-                puppet.fixParity(start);
-                auto alg = solve(start);
-                if(alg.size() > gods_number){
-                    gods_number = alg.size();
-                    std::cout << size_t(puppet.getShapeKey(start)) << " " 
-                    << size_t(puppet.getCornerRank(start)) << " " 
-                    << size_t(puppet.getEPRank(start)) << " " 
-                    << size_t(puppet.getEORank(start)) << std::endl;     
-                    std::cout << am.translate(am.translateYX2(am.reverse(alg))) << " " << size_t(alg.size()) << std::endl;
-                }       
-            }          
-        }
-    }
 }
