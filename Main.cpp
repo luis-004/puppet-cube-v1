@@ -48,7 +48,7 @@ int main(){
     //std::cout << "loaded" << std::endl;
     //solver.scramble_set_random_moves("500_random", 500, 1000, [&](const Puppet::State& s) { return solver.astar(s);}, true);
     //solver.scramble_set_decreasing_random_states("tables/decreasing_set", 35, {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20}, true);
-    solver.solve_scramble_set("scramblesets/decreasing_set", [&](const Puppet::State& s) { return solver.astar(s);});
+    solver.solve_scramble_set("scramblesets/scrambles_500_sorted", [&](const Puppet::State& s) { return solver.bwas(s, 10000, 0.2);});
     /*auto scramble = solver.random_state([&](const Puppet::State& s) { return solver.iterative_deepening(s, 25);});
     std::cout << "Ready" << std::endl;
     size_t count = 0;

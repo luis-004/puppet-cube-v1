@@ -51,6 +51,4 @@ class Solver{
         void scramble_set_decreasing_random_states(const std::string& filename, size_t max_depth, std::vector<size_t> count_per_depth, bool sort);
         
         void solve_scramble_set(const std::string& filename, const solvefunc& solve);
-        void god(const solvefunc& solve);
-        void gods_mirror(const solvefunc& solve);
 };
