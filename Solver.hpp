@@ -35,20 +35,23 @@ class Solver{
     public:
         Solver(const std::string& shape_index_file, const std::string& shape_info_file, const std::string& CF_table_file, const std::string& SE_table_file);
         uint8_t getHeuVal(const Puppet::State& state);
+
         std::vector<Move> astar(const Puppet::State& start);
-        std::vector<Move> astar_weighted(const Puppet::State& start, const double weight);
         std::vector<Move> bwas(const Puppet::State& start, const size_t batch_size, const double depthPenalty);
-        std::vector<Move> astar_parent_nodes(const Puppet::State& start);
         std::vector<Move> iterative_deepening(const Puppet::State& start, const size_t max_depth);
-        std::vector<Move> iterative_deepening_rec(const Puppet::State& start, const size_t max_depth);
         std::vector<Move> beam_search(const Puppet::State& start, const size_t width);
+
+        std::vector<Move> astar_weighted(const Puppet::State& start, const double weight);
+        std::vector<Move> astar_parent_nodes(const Puppet::State& start);
+        std::vector<Move> iterative_deepening_rec(const Puppet::State& start, const size_t max_depth);
 
         using solvefunc = std::function<std::vector<Move>(const Puppet::State&)>;
 
+        // scramble generation
         std::vector<Move> random_state(const solvefunc& solve);
         void scramble_set_random_states(const std::string& filename, size_t count, const solvefunc& solve, bool sort);
         void scramble_set_random_moves(const std::string& filename, size_t count, size_t depth, const solvefunc& solve, bool sort);
         void scramble_set_decreasing_random_states(const std::string& filename, size_t max_depth, std::vector<size_t> count_per_depth, bool sort);
-        
+
         void solve_scramble_set(const std::string& filename, const solvefunc& solve);
 };
