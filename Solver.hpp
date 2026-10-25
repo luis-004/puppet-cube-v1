@@ -37,10 +37,10 @@ class Solver{
         uint8_t getHeuVal(const Puppet::State& state);
 
         std::vector<Move> astar(const Puppet::State& start);
-        std::vector<Move> bwas(const Puppet::State& start, const size_t batch_size, const double depthPenalty);
         std::vector<Move> iterative_deepening(const Puppet::State& start, const size_t max_depth);
+        std::vector<Move> bwas(const Puppet::State& start, const size_t batch_size, const double depthPenalty);
+        
         std::vector<Move> beam_search(const Puppet::State& start, const size_t width);
-
         std::vector<Move> astar_weighted(const Puppet::State& start, const double weight);
         std::vector<Move> astar_parent_nodes(const Puppet::State& start);
         std::vector<Move> iterative_deepening_rec(const Puppet::State& start, const size_t max_depth);

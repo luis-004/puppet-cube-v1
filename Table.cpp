@@ -42,7 +42,8 @@ void Table::getShapeTables(){
     valid_shapes[key] = 0b1111;
     shape_ranks[key] = 0;
     uint16_t rank = 1;
-    uint16_t states_visited = 1;
+    size_t states_visited = 1;
+    size_t graph_edges = 0;
     uint8_t last_face = 255;
     states[bucket].push_back({state, shape, last_face});
     while(true){
@@ -54,7 +55,8 @@ void Table::getShapeTables(){
         }else if(!states[!bucket].empty()){
             std::cout << "num turns:" << int(num_turns) << std::endl;
             std::cout << "num cases:" << int(rank) << std::endl;
-            std::cout << "num visited:" << int(states_visited) << std::endl;
+            std::cout << "num visited:" << states_visited << std::endl;
+            std::cout << "num edges:" << graph_edges << std::endl;
             now = std::chrono::high_resolution_clock::now();
             duration = now - start_time;
             std::cout << "time: " << duration.count() <<  std::endl << std::endl;
@@ -80,6 +82,7 @@ void Table::getShapeTables(){
                 if((half_turn_possible || rotation != 2) && puppet_shape.turn(new_shape, getMove(face, rotation))){
                     half_turn_possible = true;
                     shape_turns[key] |= (1u << (face*3 + rotation)); // add valid turn
+                    graph_edges++;
                     valid_shapes[key] |= (1u << 0);
                     if(rotation == 2){
                         valid_shapes[key] |= (1u << (face + 1));
