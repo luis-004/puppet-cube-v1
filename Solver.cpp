@@ -211,6 +211,15 @@ std::vector<Move> Solver::bwas(const Puppet::State& start, const size_t batch_si
 		// Remove from open
 		int openSize = (int) open.size();
 		int numPop = std::min(openSize, int(batch_size));
+        if(numPop == 0){
+            auto now = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> duration = now - search_start_time;
+            std::cout << " time:" << duration.count() << " tExpand:" << tExpand << " tClosed:" << tClosed << " tPush:" << tPush 
+            << " iterations: " << searchItr <<" nodes_generated: " << numNodesGenerated
+            << " nodes_per_second: " << double(duration.count() > 0 ?  numNodesGenerated / double(duration.count()) : 0.0)
+            << " NO SOLUTION FOUND!!" << std::endl; 
+            return {};
+        }
 		std::vector<Node*> popped;
 
 		//t1 = std::chrono::high_resolution_clock::now();
@@ -393,7 +402,7 @@ std::vector<Move> Solver::beam_search(const Puppet::State& start, const size_t w
             max_nodes = size;
         }
         if(kids.empty()){
-            std::cout << "Sackgasse" << std::endl;
+            std::cout << " NO SOLUTION FOUND!!!" << std::endl;
             return {};
         }
         size_t keep = std::min(width, kids.size());

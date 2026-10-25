@@ -2,8 +2,8 @@ CXX      := g++
 WARN     := -pedantic -Wall -fdiagnostics-color=always
 DEPFLAGS := -MMD -MP
 
-CXXFLAGS_REL := -O3 -DNDEBUG -fopenmp $(WARN) $(DEPFLAGS)
-CXXFLAGS_DBG := -g -O0 -fopenmp -Werror $(WARN) $(DEPFLAGS) \
+CXXFLAGS_REL := -O3 -std=c++17 -DNDEBUG -fopenmp $(WARN) $(DEPFLAGS)
+CXXFLAGS_DBG := -g -O0 --std=c++17 fopenmp -Werror $(WARN) $(DEPFLAGS) \
                 -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
 LDFLAGS  := -fopenmp
 
