@@ -13,7 +13,7 @@ PyTorch:
 CUDA: True
 
 Solve States in Dataset...
-Index,Moves,Iterarions,HeuWaitTime,HeuristicTime,Time,Nodes,
+Index,Moves,Iterations,HeuWaitTime,HeuristicTime,Time,Nodes,
 
 
 0,22,24,1.545730,2.045930,2.481870,494887
