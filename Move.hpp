@@ -6,6 +6,7 @@ enum class Move: uint8_t {
     R=0,Rc,R2,U,Uc,U2,F,Fc,F2
 };
 
+// value representing the end of a sequence
 constexpr Move END = static_cast<Move>(255);
 
 static constexpr std::array<uint8_t, 3> reverseRotation = {1, 0, 2};

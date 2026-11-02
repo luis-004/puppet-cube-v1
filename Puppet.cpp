@@ -114,7 +114,7 @@ void Puppet::mirror(State& state){
     }
 }
 
-Puppet::State Puppet::stateFromIdxs(uint32_t shape_hash, uint8_t corner_idx, uint32_t edge_idx, uint8_t flip_idx){
+Puppet::State Puppet::stateFromRanks(uint32_t shape_hash, uint8_t corner_idx, uint32_t edge_idx, uint8_t flip_idx){
     State state;
     for(int i = 0; i < NUM_CORNERS; i++){
         state.corners[i] = 0;

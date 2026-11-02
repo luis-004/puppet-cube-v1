@@ -23,6 +23,9 @@
 #include "AlgMani.hpp"
 #include "Table.hpp"
 
+// generates scramble sequences by randomly turning faces starting from the goal state, excluding consecutive moves
+// the backwards_generate method for the DeepCubeA variant is inspired by this. Other than that, not relevant for the work
+
 class BackwardGenerator{
     Puppet puppet;
     AlgMani am;

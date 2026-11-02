@@ -19,7 +19,7 @@
 #include "Move.hpp"
 #include "AlgMani.hpp"
 
-static constexpr size_t SHAPE_TABLE_SIZE = 102060; // (7 choose 3) * 4 * 3^6
+static constexpr size_t SHAPE_TABLE_SIZE = 102060; // (6 choose 3) * 7 * 4 * 3^6
 static constexpr size_t NUM_SHAPES = 13174;
 static constexpr size_t CEO_SIZE = 13174*36*256;
 static constexpr size_t SEP_SIZE = 13174ULL * 362880;
@@ -29,6 +29,10 @@ static constexpr size_t NUM_EDGE_PERMUTATIONS = 362880;
 static constexpr size_t NUM_EDGE_ORIENTATIONS = 256;
 static constexpr uint8_t NUM_MOVES = 9; 
 
+// Table Generator module
+// CEO: Shape + Corner Group (= all Corners) + EO
+// SEP: Shape + EP
+
 class Table{
     Puppet puppet;
     PuppetShape puppet_shape;
@@ -36,8 +40,8 @@ class Table{
 
     public:
         Table();
-        std::vector<uint16_t> shape_turns;
-        std::vector<uint16_t> rank_table;
+        std::vector<uint16_t> shape_moves;
+        std::vector<uint16_t> shape_ranks;
         std::vector<uint8_t> CEO_table;
         std::vector<uint8_t> SEP_table;
 
@@ -115,8 +119,13 @@ class Table{
         size_t EP_Rank(const Puppet::State&);
 
         using RankFunc = size_t (Table::*)(const Puppet::State&);
+
+        // compute shape tables
         void getShapeTables();
-        //void corner_table();
-        void tableFull(const std::string& filename, const uint64_t entries, RankFunc idxfunc);
+
+        // compute a PDB
+        void tableFull(const std::string& filename, const uint64_t entries, RankFunc rf);
+
+        // debugging purposes
         void table_full_turn(const uint64_t entries, RankFunc idxfunc);
 };

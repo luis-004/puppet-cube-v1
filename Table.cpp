@@ -2,18 +2,18 @@
 Table::Table(){}
 
 size_t Table::CEO_Rank(const Puppet::State& state){
-    return rank_table[puppet.getShapeKey(state)] * NUM_CORNER_CYCLES * NUM_EDGE_ORIENTATIONS
+    return shape_ranks[puppet.getShapeKey(state)] * NUM_CORNER_CYCLES * NUM_EDGE_ORIENTATIONS
         + puppet.getCornerRank(state) * NUM_EDGE_ORIENTATIONS
         + puppet.getEORank(state);
 }
 
 size_t Table::SEP_Rank(const Puppet::State& state){
-    return rank_table[puppet.getShapeKey(state)] * NUM_EDGE_PERMUTATIONS + puppet.getEPRank(state);
+    return shape_ranks[puppet.getShapeKey(state)] * NUM_EDGE_PERMUTATIONS + puppet.getEPRank(state);
 }
 
 size_t Table::EP_Rank(const Puppet::State& state){
     return puppet.getEPRank(state);
- }
+}
 
 void Table::getShapeTables(){
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -29,7 +29,7 @@ void Table::getShapeTables(){
     bool bucket = 0;
     std::array<std::vector<node>, 2> states;
     std::vector<uint16_t> shape_turns;
-    std::vector<uint8_t> valid_shapes;
+    std::vector<uint8_t> valid_shapes; // for DeepCubeA
     std::vector<uint16_t> shape_ranks;
     shape_turns.resize(SHAPE_TABLE_SIZE);
     valid_shapes.resize(SHAPE_TABLE_SIZE);
@@ -65,7 +65,7 @@ void Table::getShapeTables(){
             continue;
         }else{
             std::cout << "end" << std::endl;
-            write_table("tables/shape_turns", shape_turns);
+            write_table("tables/shape_moves", shape_turns);
             write_table("tables/shape_ranks", shape_ranks);
             write_table("tables/valid_shapes", valid_shapes);
             std::cout << "saved" <<  std::endl;
@@ -87,7 +87,7 @@ void Table::getShapeTables(){
                     if(rotation == 2){
                         valid_shapes[key] |= (1u << (face + 1));
                     }
-                    if(face == last_face) continue;
+                    if(face == last_face) continue; // avoid consecutive moves on same face
                     states_visited++;
                     Puppet::State new_state = state;
                     puppet.turn(new_state, getMove(face, rotation));
@@ -107,8 +107,8 @@ void Table::tableFull(const std::string& filename, const uint64_t num_entries, R
     std::chrono::duration<double> duration{0.0};
     auto now = start_time;
     std::cout << "start" << std::endl;
-    load_table<uint16_t> (shape_turns, "tables/shape_turns");
-    load_table<uint16_t> (rank_table, "tables/shape_ranks");
+    load_table<uint16_t> (shape_moves, "tables/shape_moves");
+    load_table<uint16_t> (shape_ranks, "tables/shape_ranks");
     struct node{
         Puppet::State state;
         uint8_t last_face;
@@ -155,13 +155,13 @@ void Table::tableFull(const std::string& filename, const uint64_t num_entries, R
             std::cout << "time: " << duration.count() <<  std::endl;
             return;
         }
-        uint16_t valid_turns = shape_turns[puppet.getShapeKey(state)];
+        uint16_t valid_turns = shape_moves[puppet.getShapeKey(state)];
         uint8_t move_idx;
         while((move_idx = __builtin_ctz(valid_turns)) < NUM_MOVES){ // get idx of least significant 1
             valid_turns &= valid_turns - 1; // set least significant 1 to 0
             Move m = static_cast<Move>(move_idx);
             uint8_t face = getFace(m);
-            if(last_face == face) continue;
+            if(last_face == face) continue; // avoid consecutive moves on same face
             Puppet::State new_state = state;
             puppet.turn(new_state, m);
             uint8_t &current_entry = table[(this->*rank_function)(new_state)];
@@ -170,7 +170,7 @@ void Table::tableFull(const std::string& filename, const uint64_t num_entries, R
                 count++;
                 total_count++;
                 states[!bucket].push_back({new_state, face});
-                for(int j = 0; j < 5; j++){
+                for(int j = 0; j < 5; j++){ // 6-fold symmetry
                     if(j == 2){
                         puppet.mirror(new_state);
                     }else{
@@ -195,7 +195,7 @@ void Table::table_full_turn(const uint64_t entries, RankFunc idxfunc){
     std::chrono::duration<double> duration{0.0};
     auto now = start_time;
     std::cout << "start" << std::endl;
-    load_table<uint16_t> (rank_table, "Shape_index_htm");
+    load_table<uint16_t> (shape_ranks, "Shape_index_htm");
     std::vector<Move> alg = {};
     std::array<std::vector<std::vector<Move>>, 2> algs;
     std::vector<uint8_t> table;

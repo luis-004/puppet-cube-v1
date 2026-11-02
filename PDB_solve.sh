@@ -9,7 +9,7 @@
 
 source /cluster/$USER/venvs/puppet-dca/bin/activate
 
-cd ~/puppet-cube-v1 # path may not be right
+cd ~/puppet-cube-v1
 
 echo "Node:"
 hostname

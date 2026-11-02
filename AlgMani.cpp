@@ -34,6 +34,14 @@ std::vector<Move> AlgMani::translateBack(const std::string& alg) {
     return translatedAlg;
 }
 
+std::vector<Move>  AlgMani::reverse(std::vector<Move> alg){
+    std::vector<Move> reversedAlg;
+    for(int8_t i=alg.size()-1; i >= 0; i--){
+        reversedAlg.push_back(getMove(getFace(alg[i]), rev_dir[getRotation(alg[i])]));
+    }
+    return reversedAlg;
+}
+
 std::vector<Move>  AlgMani::translateYX2(std::vector<Move> alg){
     uint8_t pos = 7;
     std::array<uint8_t, 3> translateFace = {2,1,0};
@@ -72,14 +80,6 @@ std::vector<Move>  AlgMani::translateYX2(std::vector<Move> alg){
         }
     }
     return translatedAlg;
-}
-
-std::vector<Move>  AlgMani::reverse(std::vector<Move> alg){
-    std::vector<Move> reversedAlg;
-    for(int8_t i=alg.size()-1; i >= 0; i--){
-        reversedAlg.push_back(getMove(getFace(alg[i]), rev_dir[getRotation(alg[i])]));
-    }
-    return reversedAlg;
 }
 
 std::pair<std::vector<Move>, std::array<uint8_t, 6>> AlgMani::optimizeRUF(std::vector<Move> alg, std::array<uint8_t, 6> turns){

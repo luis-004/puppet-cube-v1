@@ -5,10 +5,6 @@ void PuppetShape::getCubeShape(Shape& shape){
     shape.cubies = goal_cubies;
 }
 
-bool PuppetShape::testCubeShape(const Shape& shape){
-    return shape.cubies == goal_cubies;
-}
-
 // assumes double turns are possible
 bool PuppetShape::turn(Shape& shape, Move m){
     const auto& rotation_idxs = roll[getRotation(m)];

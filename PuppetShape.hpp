@@ -11,16 +11,11 @@
 
 #include "Move.hpp"
 
-/*
-        {
-            0,   1,   2,   3,   4,    5,   6,   7,   8,   9,    10,  11,  12,  13,  14,   15,  16,  17,  18,  19,   20,  21,  22,  23,  24,
-            25,  26,  27,  28,  29,   30,  31,  32,  33,  34,   35,  36,  37,  38,  39,   40,  41,  42,  43,  44,   45,  46,  47,  48,  49,
-            50,  51,  52,  53,  54,   55,  56,  57,  58,  59,   60,  61,  62,  63,  64,   65,  66,  67,  68,  69,   70,  71,  72,  73,  74,
-            75,  76,  77,  78,  79,   80,  81,  82,  83,  84,   85,  86,  87,  88,  89,   90,  91,  92,  93,  94,   95,  96,  97,  98,  99,
-            100, 101, 102, 103, 104,  105, 106, 107, 108, 109,  110, 111, 112, 113, 114,  115, 116, 117, 118, 119,  120, 121, 122, 123, 124
-        }
-*/
+// shape representation
+
 class PuppetShape {
+
+    // goal state of the shape 
     static constexpr std::array<uint8_t, 125> goal_cubies = {
         7,7,6,6,0, 7,7,6,6,0, 3,3,2,2,0, 3,3,2,2,0, 0,0,0,0,0,
         7,7,6,6,0, 7,7,0,6,0, 3,0,0,0,0, 3,3,0,2,0, 0,0,0,0,0,
@@ -29,7 +24,7 @@ class PuppetShape {
         0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0
     };
 
-    static constexpr uint8_t cycle_idxs[3][15][4] = {
+    static constexpr uint8_t cycle_idxs[3][15][4] = { // 3 faces; 15 different cycles happen on a turn; 4 cubies per cycle
         {   // R
             {31, 41, 91, 81}, 
             {30, 40, 90, 80}, {35, 65, 85, 55},
@@ -53,14 +48,18 @@ class PuppetShape {
         }
     };
 
-    static constexpr uint8_t roll[3][4] = { // 3 faces and 4 cubies per cycle
+    static constexpr uint8_t roll[3][4] = { // 3 different possible rotatios and 4 cubies per cycle
         {3,0,1,2}, // clockwise
         {1,2,3,0}, // counterclockwise
         {2,3,0,1}  // double
     };
 
+    // blocking only happens in the cycles with index 7 and onward
     static constexpr uint8_t BLOCKING_IDX = 7;
-    static constexpr uint8_t INNER_COR_IDX = 0;
+
+    // the cycle at index 0 represents the cubies of the corners in the 3x3x3 base cube.
+    // these determine which cubies move on a certain turn
+    static constexpr uint8_t INNER_COR_IDX = 0;  
 
     public:
         struct Shape{
@@ -71,6 +70,5 @@ class PuppetShape {
         };
         PuppetShape();
         void getCubeShape(Shape& shape);
-        bool testCubeShape(const Shape& shape);
         bool turn(Shape& shape, Move m);
 };

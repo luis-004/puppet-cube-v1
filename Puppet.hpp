@@ -13,6 +13,8 @@
 
 #include "Move.hpp"
 
+// state representation of the Puppet Cube
+
 class Puppet{
     static constexpr uint8_t NUM_CORNERS = 7;
     static constexpr uint8_t NUM_EDGES = 9;
@@ -21,6 +23,7 @@ class Puppet{
     static constexpr uint8_t NUM_CORNER_VALS = 21;
     static constexpr uint8_t RANGE_EDGE_VALS = 25;
 
+    // defiition of the goal state
     static constexpr std::array<uint8_t, NUM_CORNERS> solved_corners = {0, 1, 2, 3, 4, 5, 6};
     static constexpr std::array<uint8_t, NUM_EDGES> solved_edges = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 
@@ -36,6 +39,7 @@ class Puppet{
         {13, 19, 2, 3, 4, 8, 14, 20, 5, 9, 10, 11, 15, 0, 6, 12, 16, 17, 18, 1, 7}  // F2
     };
 
+    // one independent bit is used to indicate the orientation of an edge, so the values aren't continuous. 
     static constexpr uint8_t move_edges[NUM_MOVES][RANGE_EDGE_VALS] = {
         {0, 18, 7, 3, 4, 5, 1, 22, 8, 255, 255, 255, 255, 255, 255, 255, 16, 2, 23, 19, 20, 21, 17, 6, 24}, // R
         {0, 6, 17, 3, 4, 5, 23, 2, 8, 255, 255, 255, 255, 255, 255, 255, 16, 22, 1, 19, 20, 21, 7, 18, 24}, // R'
@@ -48,11 +52,14 @@ class Puppet{
         {21, 20, 2, 3, 17, 16, 6, 7, 8, 255, 255, 255, 255, 255, 255, 255, 5, 4, 18, 19, 1, 0, 22, 23, 24}  // F2
     };
 
+    // arrays to compute the ranks
     static constexpr std::array<uint8_t, NUM_CORNER_VALS> position =    {0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6};
     static constexpr std::array<uint8_t, NUM_CORNER_VALS> orientation = {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2};
     static constexpr std::array<uint8_t, 8> corner_perms = {0, 1, 255, 2, 3, 255, 4, 5};
     static constexpr std::array<uint16_t, 7> pow3 = {0, 1, 3, 9, 27, 81, 243};
 
+    // the "CornerDistributionIndex"; gets the position of the solid corner and an index representing the permutation of the hollow corners.
+    // outputs a continuous index
     inline static const auto from6choose3 = [] {
         std::array<std::array<uint8_t, 128>, 7> table{};
         for (auto& row : table) {
@@ -100,16 +107,20 @@ class Puppet{
 
         void turn(State& state, Move m);
 
-        //uint32_t getCornerHash(const State& state);
+        // extract ranks and keys
         uint32_t getShapeKey(const State&);
         uint8_t getCornerRank(const State& state);
         uint32_t getEPRank(const State& state);
         uint8_t getEORank(const State& state);
         std::pair<uint32_t, uint8_t> getEdgeRanks(const State& state);
 
+        // methods to compute symmetrically similar states (used to exploit the 6-fold symmetry)
         void rotate(State& state);
         void mirror(State& state);
 
-        State stateFromIdxs(uint32_t shape_hash, uint8_t corner_idx, uint32_t edge_idx, uint8_t flip_idx);
+        // function to reconstruct a state out of chosen ranks. Such a state could have odd parity and be therefore
+        // not normally solvable. Therefore, fixParity checks for parity and, if it's odd, 
+        // swaps two edges in the state to make it solvable 
+        State stateFromRanks(uint32_t shape_key, uint8_t corner_rank, uint32_t edge_rank, uint8_t flip_rank);
         bool fixParity(State& state);
 };
