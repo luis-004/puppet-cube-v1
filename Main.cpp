@@ -47,7 +47,7 @@ int main(){
     // -- solving scramblesets with different solvers --
     //solver.solve_scramble_set("scramblesets/scrambles_500_sorted", [&](const Puppet::State& s) { return solver.astar(s);});
     //solver.solve_scramble_set("scramblesets/scrambles_500_sorted", [&](const Puppet::State& s) { return solver.iterative_deepening(s, 50);});
-    solver.solve_scramble_set("scramblesets/scrambles_20perdistance", [&](const Puppet::State& s) { return solver.bwas(s, 10000, 0.0);});
+    //solver.solve_scramble_set("scramblesets/scrambles_20perdistance", [&](const Puppet::State& s) { return solver.bwas(s, 10000, 0.0);});
     //solver.solve_scramble_set("scramblesets/scrambles_20perdistance", [&](const Puppet::State& s) { return solver.beam_search(s, 100);});
 
     // -- other stuff irrelevant for the work --

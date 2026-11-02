@@ -5,7 +5,7 @@
 #SBATCH --mem=24000
 #SBATCH --gres=gpu:v100:1
 #SBATCH --time=24:00:00
-#SBATCH --output=outs/%j_puppetPDB.out
+#SBATCH --output=%j_puppetPDB.out
 
 source /cluster/$USER/venvs/puppet-dca/bin/activate
 
