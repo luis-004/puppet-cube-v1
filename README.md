@@ -6,7 +6,7 @@
 - The main function in **Main.cpp** is the program's entry point.
 - use "make saveOutput" to run the program and save its output in a new file
 
-### Modules
+### Modules discussed in the thesis
 
 - **Puppet**  
   State representation of the cube, including functions for computing
@@ -23,9 +23,6 @@
 - **Solver**  
   Contains the different PDB solver implementations, as well as
   methods for generating and solving sets of scrambles.
-
-- **Main**  
-  program's entry point.
 
 ### Experimental Data
 
