@@ -1,15 +1,33 @@
-Overview of the modules discussed in the thesis:
+# Puppet Cube PDB Solvers
 
-Puppet: the state representation of the cube, along with functions for the ranks and keys as well as other methods
-PuppetShape: the shape representation, including the simulation of the blocking mechanism
-Table: generates the shape tables and PDBs required for solving
-Solver: the different PDB solver implementations along with methods to generate and solve scramblesets
+### Usage
 
-results_BA: the results evaluated in the study
+- A makefile is used to compile the code
+- The main function in **Main.cpp** is the program's entry point.
+- use "make saveOutput" to run the program and save its output in a new file
 
-the scramblesets used in the study:
--scrambles_500_sorted
--scrambles_20perdistance
+### Modules
 
+- **Puppet**  
+  State representation of the cube, including functions for computing
+  ranks and keys and additional utility methods.
 
-The Main module contains the main function
+- **PuppetShape**  
+  Shape representation of the cube with the simulation of the
+  blocking mechanism.
+
+- **Table**  
+  Methods to generate the shape tables and pattern databases (PDBs) required
+  for solving.
+
+- **Solver**  
+  Contains the different PDB solver implementations, as well as
+  methods for generating and solving sets of scrambles.
+
+- **Main**  
+  program's entry point.
+
+### Experimental Data
+
+- results_BA contains the results evaluated in the thesis.
+- Scramble set used in the experiments: scrambles_500_sorted, scrambles_20perdistance
