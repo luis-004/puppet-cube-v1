@@ -27,4 +27,4 @@
 ### Experimental Data
 
 - results_BA contains the results evaluated in the thesis.
-- Scramble set used in the experiments: scrambles_500_sorted, scrambles_20perdistance
+- Scramble sets used in the experiments: scrambles_500_sorted, scrambles_20perdistance
